@@ -17,8 +17,8 @@ Nach der einmaligen manuellen Einrichtung der Dateien in
 arbeiten.
 
 Alle Profile enthalten die lokale ESPHome-Weboberfläche. Sie ist über
-`http://<device-name>.local/` oder die IP-Adresse des ESP erreichbar und mit
-den zwei `kb35_web_server_*`-Secrets geschützt. Den Webserver ausschließlich
+`http://<device-name>.local/` oder die IP-Adresse des ESP erreichbar. Den
+Webserver ausschließlich
 im vertrauenswürdigen Heimnetz betreiben.
 
 ## Temperaturwerte

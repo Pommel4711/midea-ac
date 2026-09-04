@@ -1,13 +1,12 @@
 # Kältebringer KB35-12000BTU / Midea UART core package.
 # This is an ESPHome remote package, not a HACS integration.
-# The caller supplies kb35_repository_url/ref so the external component and
-# this package always come from the same, reviewable Git revision.
+# The external component is loaded from this same private repository.
 
 external_components:
   - source:
       type: git
-      url: ${kb35_repository_url}
-      ref: ${kb35_repository_ref}
+      url: "https://x-access-token:${github_read_token}@github.com/Pommel4711/midea-ac.git"
+      ref: main
     components: [kb35_midea]
     refresh: 1d
 
@@ -35,7 +34,7 @@ api:
 ota:
   - platform: esphome
     password: ${ota_password}
-  # Unabhängiges Firmware-Update über die geschützte ESP-Weboberfläche.
+  # Unabhängiges Firmware-Update über die lokale ESP-Weboberfläche.
   - platform: web_server
 
 wifi:
@@ -53,10 +52,6 @@ web_server:
   version: 3
   local: true
   log: false
-  auth:
-    type: digest
-    username: ${web_server_username}
-    password: ${web_server_password}
   sorting_groups:
     - id: kb35_web_climate
       name: Klimaanlage

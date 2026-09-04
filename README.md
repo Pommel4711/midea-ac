@@ -39,10 +39,10 @@ stehen in [docs/PROFILES.md](docs/PROFILES.md).
 
 ## ESP-Weboberfläche
 
-Jedes Profil enthält eine lokale, geschützte ESPHome-Weboberfläche (Version 3)
+Jedes Profil enthält eine lokale ESPHome-Weboberfläche (Version 3)
 mit Gruppen für Klima, Zusatzfunktionen und Diagnose. Sie läuft ohne Home
 Assistant unter `http://<device-name>.local/` oder der Geräte-IP. Die
-Zugangsdaten kommen verpflichtend aus `secrets.yaml`; den Webserver niemals
+Weboberfläche hat auf Wunsch keine Anmeldung; den Webserver deshalb niemals
 aus dem Heimnetz ins Internet weiterleiten.
 
 ## Optional: schöne Kreisoberfläche später
