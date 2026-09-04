@@ -8,7 +8,7 @@ external_components:
       url: https://github.com/Pommel4711/midea-ac.git
       ref: main
     components: [kb35_midea]
-    refresh: 1d
+    refresh: 30s
 
 esphome:
   name: ${device_name}

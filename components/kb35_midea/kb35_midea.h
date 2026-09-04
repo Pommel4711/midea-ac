@@ -52,7 +52,7 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   void set_outdoor_temperature_sensor(sensor::Sensor *entity) { this->outdoor_temperature_sensor_ = entity; }
   void set_error_code_sensor(sensor::Sensor *entity) { this->error_code_sensor_ = entity; }
   void set_communication_sensor(binary_sensor::BinarySensor *entity) { this->communication_sensor_ = entity; }
-  void set_power_limit_select(select_::Select *entity) { this->power_limit_select_ = entity; }
+  void set_power_limit_select(select::Select *entity) { this->power_limit_select_ = entity; }
 
   void set_fan_speed(uint8_t fan_speed);
   void set_boost(bool enabled);
@@ -103,7 +103,7 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   sensor::Sensor *outdoor_temperature_sensor_{nullptr};
   sensor::Sensor *error_code_sensor_{nullptr};
   binary_sensor::BinarySensor *communication_sensor_{nullptr};
-  select_::Select *power_limit_select_{nullptr};
+  select::Select *power_limit_select_{nullptr};
 };
 
 }  // namespace esphome::kb35_midea

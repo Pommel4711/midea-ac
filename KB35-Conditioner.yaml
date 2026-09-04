@@ -2,7 +2,7 @@
 # Das Paket ist absichtlich genauso aufgebaut wie Pommel/TCL: Die persönliche
 # Konfiguration bleibt klein; die eigentliche Logik lädt von GitHub nach.
 substitutions:
-  device_name: splitanlage_1og
+  device_name: splitanlage-1og
   friendly_name: Splitanlage 1. OG
 
   # ESPHome-Profil nach Bedarf setzen und anschließend kompilieren/flashen:
