@@ -6,4 +6,4 @@ protocol implementation lives in the climate platform module.
 """
 
 CODEOWNERS = ["@Philipp"]
-AUTO_LOAD = ["climate", "fan", "uart", "sensor", "binary_sensor", "switch", "select"]
+AUTO_LOAD = ["climate", "fan", "uart", "sensor", "binary_sensor", "switch", "select", "text_sensor"]

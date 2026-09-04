@@ -1,0 +1,2 @@
+packages:
+  sniffer: !include ../examples/kb35-uart-sniffer.yaml

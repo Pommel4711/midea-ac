@@ -1,0 +1,146 @@
+# RX-only helper for recording the original SmartKey traffic.
+# Use this while the original Wi-Fi SmartKey remains connected. Do not connect
+# a TX pin from this ESP to either data line in this mode.
+substitutions:
+  device_name: kb35-uart-sniffer
+  friendly_name: KB35 UART Sniffer
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  on_boot:
+    priority: -100
+    then:
+      - lambda: |-
+          id(sniffer_next_action).publish_state("POWER EIN");
+          id(sniffer_protocol_hint).publish_state("9600 8N1; beide Leitungen werden nur gelesen");
+
+esp32:
+  variant: ESP32S3
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+logger:
+  level: DEBUG
+  baud_rate: 0
+  tx_buffer_size: 4096
+
+globals:
+  - id: sniffer_step
+    type: uint8_t
+    restore_value: no
+    initial_value: "0"
+
+uart:
+  - id: uart_line_a
+    rx_pin: GPIO17
+    baud_rate: 9600
+    data_bits: 8
+    parity: NONE
+    stop_bits: 1
+    rx_buffer_size: 1024
+    debug:
+      direction: RX
+      dummy_receiver: true
+      after:
+        timeout: 25ms
+      sequence:
+        - lambda: |-
+            std::string result;
+            char hex[4];
+            const size_t count = std::min<size_t>(bytes.size(), 80);
+            for (size_t i = 0; i < count; i++) {
+              if (i != 0) result += ":";
+              snprintf(hex, sizeof(hex), "%02X", bytes[i]);
+              result += hex;
+            }
+            if (bytes.size() > count) result += ":...";
+            ESP_LOGI("SNIFF_A", "LINE A (%u Bytes): %s", static_cast<unsigned>(bytes.size()), result.c_str());
+            id(sniffer_last_line_a).publish_state(result);
+  - id: uart_line_b
+    rx_pin: GPIO18
+    baud_rate: 9600
+    data_bits: 8
+    parity: NONE
+    stop_bits: 1
+    rx_buffer_size: 1024
+    debug:
+      direction: RX
+      dummy_receiver: true
+      after:
+        timeout: 25ms
+      sequence:
+        - lambda: |-
+            std::string result;
+            char hex[4];
+            const size_t count = std::min<size_t>(bytes.size(), 80);
+            for (size_t i = 0; i < count; i++) {
+              if (i != 0) result += ":";
+              snprintf(hex, sizeof(hex), "%02X", bytes[i]);
+              result += hex;
+            }
+            if (bytes.size() > count) result += ":...";
+            ESP_LOGI("SNIFF_B", "LINE B (%u Bytes): %s", static_cast<unsigned>(bytes.size()), result.c_str());
+            id(sniffer_last_line_b).publish_state(result);
+
+text_sensor:
+  - platform: template
+    id: sniffer_last_line_a
+    name: Letzter Rahmen Leitung A
+  - platform: template
+    id: sniffer_last_line_b
+    name: Letzter Rahmen Leitung B
+  - platform: template
+    id: sniffer_last_marker
+    name: Letzte Markierung
+  - platform: template
+    id: sniffer_next_action
+    name: Nächste Original-App-Aktion
+  - platform: template
+    id: sniffer_protocol_hint
+    name: Sniffer-Status
+
+button:
+  - platform: template
+    name: Aktuelle Aktion markieren
+    icon: mdi:flag-checkered
+    on_press:
+      - lambda: |-
+          static const char *const STEPS[] = {
+            "POWER EIN", "POWER AUS", "COOL", "HEAT", "DRY", "FAN ONLY",
+            "TEMP 20", "TEMP 24", "FAN AUTO", "FAN 50 %", "FAN 100 %",
+            "VERTIKAL SWING", "HORIZONTAL SWING", "BOOST EIN", "BOOST AUS",
+            "SLEEP EIN", "SLEEP AUS", "FROSTSCHUTZ EIN", "FROSTSCHUTZ AUS", "LED TOGGLE"
+          };
+          constexpr size_t STEP_COUNT = sizeof(STEPS) / sizeof(STEPS[0]);
+          const size_t current = id(sniffer_step) % STEP_COUNT;
+          id(sniffer_last_marker).publish_state(STEPS[current]);
+          ESP_LOGW("MARKER", "JETZT IN DER ORIGINAL-APP AUSFUEHREN: %s", STEPS[current]);
+          id(sniffer_step) = static_cast<uint8_t>((current + 1) % STEP_COUNT);
+          id(sniffer_next_action).publish_state(STEPS[id(sniffer_step)]);
+  - platform: template
+    name: Auf ersten Capture-Schritt zurücksetzen
+    icon: mdi:restart
+    on_press:
+      - lambda: |-
+          id(sniffer_step) = 0;
+          id(sniffer_next_action).publish_state("POWER EIN");
+          id(sniffer_last_marker).publish_state("Zurückgesetzt");
+
+web_server:
+  port: 80
+  version: 3
+  local: true
+  log: true

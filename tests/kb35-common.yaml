@@ -44,6 +44,17 @@ sensor:
     id: error_code
     name: Fehlercode
 
+text_sensor:
+  - platform: template
+    id: last_tx_frame
+    name: Letzter TX-Rahmen
+  - platform: template
+    id: last_rx_frame
+    name: Letzter RX-Rahmen
+  - platform: template
+    id: transport_status
+    name: UART-Status
+
 switch:
   - platform: template
     id: boost
@@ -92,6 +103,9 @@ climate:
     error_code: error_code
     communication: communication
     power_limit_select: gear
+    last_tx_frame: last_tx_frame
+    last_rx_frame: last_rx_frame
+    transport_status: transport_status
 
 fan:
   - platform: kb35_midea

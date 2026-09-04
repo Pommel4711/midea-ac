@@ -2,7 +2,7 @@
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import binary_sensor, climate, fan, select, sensor, switch, uart
+from esphome.components import binary_sensor, climate, fan, select, sensor, switch, text_sensor, uart
 from esphome.const import CONF_ID
 
 DEPENDENCIES = ["uart"]
@@ -18,6 +18,9 @@ CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_ERROR_CODE = "error_code"
 CONF_COMMUNICATION = "communication"
 CONF_POWER_LIMIT_SELECT = "power_limit_select"
+CONF_LAST_TX_FRAME = "last_tx_frame"
+CONF_LAST_RX_FRAME = "last_rx_frame"
+CONF_TRANSPORT_STATUS = "transport_status"
 
 kb35_midea_ns = cg.esphome_ns.namespace("kb35_midea")
 KB35MideaClimate = kb35_midea_ns.class_(
@@ -40,6 +43,9 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_ERROR_CODE): cv.use_id(sensor.Sensor),
             cv.Optional(CONF_COMMUNICATION): cv.use_id(binary_sensor.BinarySensor),
             cv.Optional(CONF_POWER_LIMIT_SELECT): cv.use_id(select.Select),
+            cv.Optional(CONF_LAST_TX_FRAME): cv.use_id(text_sensor.TextSensor),
+            cv.Optional(CONF_LAST_RX_FRAME): cv.use_id(text_sensor.TextSensor),
+            cv.Optional(CONF_TRANSPORT_STATUS): cv.use_id(text_sensor.TextSensor),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
@@ -64,6 +70,9 @@ async def to_code(config):
         CONF_ERROR_CODE: "set_error_code_sensor",
         CONF_COMMUNICATION: "set_communication_sensor",
         CONF_POWER_LIMIT_SELECT: "set_power_limit_select",
+        CONF_LAST_TX_FRAME: "set_last_tx_frame_sensor",
+        CONF_LAST_RX_FRAME: "set_last_rx_frame_sensor",
+        CONF_TRANSPORT_STATUS: "set_transport_status_sensor",
     }
     for key, setter in setters.items():
         if key in config:

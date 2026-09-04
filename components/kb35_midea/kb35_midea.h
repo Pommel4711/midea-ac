@@ -12,6 +12,7 @@
 #include "esphome/components/select/select.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/switch/switch.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 
@@ -53,7 +54,11 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   void set_error_code_sensor(sensor::Sensor *entity) { this->error_code_sensor_ = entity; }
   void set_communication_sensor(binary_sensor::BinarySensor *entity) { this->communication_sensor_ = entity; }
   void set_power_limit_select(select::Select *entity) { this->power_limit_select_ = entity; }
+  void set_last_tx_frame_sensor(text_sensor::TextSensor *entity) { this->last_tx_frame_sensor_ = entity; }
+  void set_last_rx_frame_sensor(text_sensor::TextSensor *entity) { this->last_rx_frame_sensor_ = entity; }
+  void set_transport_status_sensor(text_sensor::TextSensor *entity) { this->transport_status_sensor_ = entity; }
 
+  void request_status();
   void set_fan_speed(uint8_t fan_speed);
   void set_boost(bool enabled);
   void set_sleep(bool enabled);
@@ -73,6 +78,7 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   void queue_power_limit_();
   void send_frame_(std::vector<uint8_t> frame, const char *kind);
   void command_timed_out_();
+  void publish_transport_status_(const std::string &state);
   bool ready_for_control_(const char *feature);
   void set_mode_(climate::ClimateMode mode);
   climate::ClimateMode mode_from_payload_() const;
@@ -104,6 +110,9 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   sensor::Sensor *error_code_sensor_{nullptr};
   binary_sensor::BinarySensor *communication_sensor_{nullptr};
   select::Select *power_limit_select_{nullptr};
+  text_sensor::TextSensor *last_tx_frame_sensor_{nullptr};
+  text_sensor::TextSensor *last_rx_frame_sensor_{nullptr};
+  text_sensor::TextSensor *transport_status_sensor_{nullptr};
 };
 
 }  // namespace esphome::kb35_midea

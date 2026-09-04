@@ -72,6 +72,18 @@ binary_sensor:
       sorting_group_id: kb35_web_diagnostics
       sorting_weight: 30
 
+button:
+  - platform: template
+    id: kb35_status_request
+    name: Status abfragen
+    icon: mdi:refresh
+    entity_category: diagnostic
+    on_press:
+      - lambda: id(kb35_climate).request_status();
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 0
+
 sensor:
   - platform: template
     id: kb35_indoor_temperature
@@ -103,6 +115,27 @@ sensor:
       sorting_weight: 40
 
 text_sensor:
+  - platform: template
+    id: kb35_transport_status
+    name: UART-Status
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 1
+  - platform: template
+    id: kb35_last_tx_frame
+    name: Letzter gesendeter UART-Rahmen
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 2
+  - platform: template
+    id: kb35_last_rx_frame
+    name: Letzter empfangener UART-Rahmen
+    entity_category: diagnostic
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 3
   - platform: template
     id: kb35_profile_status
     name: Steuerprofil
@@ -208,6 +241,9 @@ climate:
     error_code: kb35_error_code
     communication: kb35_communication
     power_limit_select: kb35_leistungsbegrenzung
+    last_tx_frame: kb35_last_tx_frame
+    last_rx_frame: kb35_last_rx_frame
+    transport_status: kb35_transport_status
     web_server:
       sorting_group_id: kb35_web_climate
       sorting_weight: 0

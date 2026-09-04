@@ -45,6 +45,14 @@ Assistant unter `http://<device-name>.local/` oder der Geräte-IP. Die
 Weboberfläche hat auf Wunsch keine Anmeldung; den Webserver deshalb niemals
 aus dem Heimnetz ins Internet weiterleiten.
 
+## Wenn Steuerung noch keine Antwort erhält
+
+Die Anleitung für die eindeutige RX/TX-Zuordnung, die Pegelprüfung und den
+vereinfachten RX-only-Sniffer steht in
+[docs/WIRING_AND_CAPTURE.md](docs/WIRING_AND_CAPTURE.md). Nach einem Flash
+zeigt die Steueroberfläche außerdem den letzten TX-/RX-Rahmen und den
+Übertragungsstatus an.
+
 ## Optional: schöne Kreisoberfläche später
 
 Wenn du später statt der Standard-Thermostatkarte wieder die Kreisoberfläche
@@ -56,14 +64,13 @@ später ohne Änderung am ESP nachrüsten.
 
 ## Inbetriebnahme
 
-1. Erstelle dieses Verzeichnis als privates GitHub-Repository
-   `Pommel4711/midea-ac` und pushe es.
+1. Nutze das veröffentlichte GitHub-Repository `Pommel4711/midea-ac`.
 2. Kopiere [KB35-Conditioner.yaml](KB35-Conditioner.yaml) in deinen
    ESPHome-Konfigurationsordner und nutze
    [secrets.example.yaml](secrets.example.yaml) als Vorlage.
-3. Trage dort GitHub-URL, WLAN-/API-/OTA-/Web-Secrets und UART-Pins ein. Die
-   Vorlage ist ESP32-S3/ESP-IDF; für C6 setze `board: esp32-c6-devkitc-1` und
-   behalte ESP-IDF bei.
+3. Trage WLAN-/API-/OTA-Secrets und UART-Pins ein. Die Vorlage ist
+   ESP32-S3/ESP-IDF; für C6 setze `board: esp32-c6-devkitc-1` und behalte
+   ESP-IDF bei.
 4. Kompiliere und flashe im ESPHome-Dashboard.
 5. Öffne in Home Assistant das automatisch angelegte ESPHome-Gerät. Die
    Klima- und Lüfterentität können direkt in jedem Standard-Dashboard genutzt

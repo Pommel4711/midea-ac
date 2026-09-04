@@ -142,6 +142,14 @@ void KB35MideaClimate::update() {
   if (!this->awaiting_response_) this->queue_status_request_();
 }
 
+void KB35MideaClimate::request_status() {
+  if (this->awaiting_response_) {
+    this->publish_transport_status_("Warte noch auf die Antwort zur vorherigen Anfrage");
+    return;
+  }
+  this->queue_status_request_();
+}
+
 void KB35MideaClimate::control(const climate::ClimateCall &call) {
   if (!this->ready_for_control_("Klimaänderung")) return;
   bool changed = false;
@@ -215,8 +223,11 @@ void KB35MideaClimate::reset_rx_() {
 }
 
 void KB35MideaClimate::process_frame_(const std::vector<uint8_t> &frame) {
+  const std::string raw_frame = format_hex_pretty(frame.data(), frame.size());
+  if (this->last_rx_frame_sensor_ != nullptr) this->last_rx_frame_sensor_->publish_state(raw_frame);
   if (!validate_midea_frame(frame)) {
     ESP_LOGD(TAG, "Discarding malformed Midea frame");
+    this->publish_transport_status_("Ungültiger RX-Rahmen: CRC oder Checksumme passt nicht");
     return;
   }
   // KB35 SmartKeys use 0x02 for controller-originated traffic, but captures
@@ -224,6 +235,7 @@ void KB35MideaClimate::process_frame_(const std::vector<uint8_t> &frame) {
   ESP_LOGD(TAG, "RX: %s", format_hex_pretty(frame.data(), frame.size()).c_str());
   if (frame[9] == 0x05 && frame[10] == 0xA0) {
     ESP_LOGD(TAG, "Echoing required A0 frame");
+    this->publish_transport_status_("A0-Rahmen empfangen und bestätigt");
     this->write_array(frame.data(), frame.size());
     this->flush();
     return;
@@ -232,6 +244,7 @@ void KB35MideaClimate::process_frame_(const std::vector<uint8_t> &frame) {
     // Network-status reporting is deliberately deferred until verified on the
     // physical KB35; it does not affect climate control.
     ESP_LOGD(TAG, "Received 0x63 network-status request (not required for basic control)");
+    this->publish_transport_status_("0x63-Netzwerkstatus-Anfrage empfangen");
     return;
   }
   if ((frame[9] == 0x03 || frame[9] == 0x02) && frame[10] == 0xC0) {
@@ -241,6 +254,7 @@ void KB35MideaClimate::process_frame_(const std::vector<uint8_t> &frame) {
   if (frame[9] == 0x03 && frame[10] == 0xB1 && this->awaiting_response_) {
     this->awaiting_response_ = false;
     this->cancel_timeout("kb35-command-timeout");
+    this->publish_transport_status_("B1-Antwort empfangen; Status wird aktualisiert");
     if (this->power_limit_select_ != nullptr) {
       this->power_limit_select_->publish_state(this->power_limit_ == 50 ? "50 %" : this->power_limit_ == 75 ? "75 %" : "Normal");
     }
@@ -256,6 +270,7 @@ void KB35MideaClimate::process_status_(const std::vector<uint8_t> &frame) {
   this->status_valid_ = true;
   this->awaiting_response_ = false;
   this->cancel_timeout("kb35-command-timeout");
+  this->publish_transport_status_("Gültiger C0-Status empfangen; Steuerung bereit");
   this->publish_state_();
   if (this->pending_set_) {
     this->pending_set_ = false;
@@ -344,8 +359,13 @@ void KB35MideaClimate::queue_power_limit_() {
 
 void KB35MideaClimate::send_frame_(std::vector<uint8_t> frame, const char *kind) {
   finish_midea_frame(&frame, this->message_id_++);
+  const std::string raw_frame = format_hex_pretty(frame.data(), frame.size());
   ESP_LOGD(TAG, "TX %s: %s", kind,
-           format_hex_pretty(frame.data(), frame.size()).c_str());
+           raw_frame.c_str());
+  if (this->last_tx_frame_sensor_ != nullptr) {
+    this->last_tx_frame_sensor_->publish_state(std::string(kind) + ": " + raw_frame);
+  }
+  this->publish_transport_status_(std::string("Sende ") + kind + "; warte auf Antwort");
   this->write_array(frame.data(), frame.size());
   this->flush();
   this->awaiting_response_ = true;
@@ -355,6 +375,7 @@ void KB35MideaClimate::send_frame_(std::vector<uint8_t> frame, const char *kind)
 void KB35MideaClimate::command_timed_out_() {
   if (!this->awaiting_response_) return;
   ESP_LOGW(TAG, "Keine KB35-Antwort innerhalb von 2 Sekunden");
+  this->publish_transport_status_("Keine Antwort innerhalb von 2 Sekunden: RX/TX-Richtung und Pegel prüfen");
   this->awaiting_response_ = false;
   if (this->communication_sensor_ != nullptr) this->communication_sensor_->publish_state(false);
   if (this->pending_set_) {
@@ -366,6 +387,7 @@ void KB35MideaClimate::command_timed_out_() {
 bool KB35MideaClimate::ready_for_control_(const char *feature) {
   if (this->status_valid_) return true;
   ESP_LOGW(TAG, "%s erst nach einem gültigen C0-Status möglich; Status wird abgefragt", feature);
+  this->publish_transport_status_(std::string(feature) + ": noch kein gültiger C0-Status");
   this->queue_status_request_();
   return false;
 }
@@ -451,5 +473,9 @@ climate::ClimateSwingMode KB35MideaClimate::swing_from_payload_() const {
 }
 
 uint8_t KB35MideaClimate::clamp_fan_(uint8_t speed) { return std::min<uint8_t>(speed, 100); }
+
+void KB35MideaClimate::publish_transport_status_(const std::string &state) {
+  if (this->transport_status_sensor_ != nullptr) this->transport_status_sensor_->publish_state(state);
+}
 
 }  // namespace esphome::kb35_midea
