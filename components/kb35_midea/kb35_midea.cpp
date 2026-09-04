@@ -16,6 +16,21 @@ namespace esphome::kb35_midea {
 
 static const char *const TAG = "kb35_midea";
 
+// Midea C0 uses the integer/half-degree base in data[11]/data[12] and
+// supplies the remaining decimal information in data[15]. This deliberately
+// follows the documented Midea UART parser rather than inventing a KB35-only
+// temperature conversion. Decimal correction applies only when the device
+// reports Celsius (data[10] bit 0x04 clear).
+static float decode_c0_temperature(uint8_t encoded, uint8_t decimal_nibble, bool celsius) {
+  float result = static_cast<float>(static_cast<int>(encoded) - 50) / 2.0f;
+  if (!celsius || decimal_nibble == 0) return result;
+
+  const float sign = result < 0.0f ? -1.0f : 1.0f;
+  result += sign * (static_cast<float>(decimal_nibble) / 10.0f);
+  if (decimal_nibble >= 5) result += sign * 0.5f;
+  return result;
+}
+
 void KB35MideaFan::setup() {
   this->traits_ = fan::FanTraits(false, true, false, 100);
   this->set_supported_preset_modes({"Auto"});
@@ -256,14 +271,18 @@ void KB35MideaClimate::publish_state_() {
   // The C0 status carries measured temperatures independently of the target
   // setpoint. This is the indoor-unit/return-air value, not the requested
   // temperature in status_[2].
-  const float indoor_temperature = static_cast<float>(static_cast<int>(this->status_[11]) - 50) / 2.0f;
+  const bool celsius = (this->status_[10] & 0x04U) == 0;
+  const uint8_t indoor_decimal = this->status_[15] & 0x0FU;
+  const uint8_t outdoor_decimal = (this->status_[15] & 0xF0U) >> 4U;
+  const float indoor_temperature = decode_c0_temperature(this->status_[11], indoor_decimal, celsius);
   this->current_temperature = indoor_temperature;
   if (this->indoor_temperature_sensor_ != nullptr) {
     this->indoor_temperature_sensor_->publish_state(indoor_temperature);
   }
   this->action = (this->status_[1] & 0x01U) ? climate::CLIMATE_ACTION_IDLE : climate::CLIMATE_ACTION_OFF;
   if (this->outdoor_temperature_sensor_ != nullptr) {
-    this->outdoor_temperature_sensor_->publish_state(static_cast<float>(static_cast<int>(this->status_[12]) - 50) / 2.0f);
+    this->outdoor_temperature_sensor_->publish_state(
+        decode_c0_temperature(this->status_[12], outdoor_decimal, celsius));
   }
   if (this->error_code_sensor_ != nullptr) this->error_code_sensor_->publish_state(this->status_[16]);
   if (this->communication_sensor_ != nullptr) this->communication_sensor_->publish_state(true);

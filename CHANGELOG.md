@@ -8,6 +8,8 @@ Analyse und einer ausdrücklichen Entscheidung eingetragen.
 
 ### Hinzugefügt
 
+- Ein bytegenauer Protokollaudit mit der Trennung zwischen KB35-Mitschnitten,
+  Midea-Referenzfeldern und noch offenen Funktionen.
 - Drei ESPHome-Steuerprofile: `native`, `native_plus` und
   `custom_dashboard`.
 - Eine geschützte lokale ESPHome-Weboberfläche mit Web-OTA, Steuer- und
@@ -23,6 +25,8 @@ Analyse und einer ausdrücklichen Entscheidung eingetragen.
 
 ### Geändert
 
+- Innen- und Außentemperatur berücksichtigen die dokumentierten C0-
+  Nachkommabits.
 - Bedienung auf die Standard-Home-Assistant-Entitäten umgestellt: keine
   benutzerdefinierte Lovelace-Karte, keine Ressourceninstallation und kein
   Dashboard-YAML mehr erforderlich.

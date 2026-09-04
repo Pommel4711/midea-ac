@@ -89,6 +89,8 @@ LED-Display, Schnellstart, feste Luftrichtungen, Schlafkurven-Dauer und der
 geräteinterne Zeitplan sind absichtlich nicht als Ratebefehl implementiert.
 Die exakten benötigten Rohmitschnitte stehen in
 [docs/OPEN_PROTOCOL_QUESTIONS.md](docs/OPEN_PROTOCOL_QUESTIONS.md).
+Der vollständige Abgleich von implementierten und noch offenen KB35-Bits steht
+in [docs/PROTOCOL_AUDIT.md](docs/PROTOCOL_AUDIT.md).
 
 ## Referenz-Updates nur analysieren
 

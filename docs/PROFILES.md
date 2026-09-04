@@ -27,9 +27,9 @@ Die Solltemperatur der Klimaentität ist unabhängig von den Messwerten:
 
 | Entität | Bedeutung | Protokollstand |
 | --- | --- | --- |
-| `Klimaanlage` → aktuelle Temperatur | Vom Innengerät gemessene Temperatur | Statusfeld 11 |
-| `Innentemperatur (Innengerät)` | Derselbe, ausdrücklich sichtbare Messwert | Statusfeld 11 |
-| `Außentemperatur (Außengerät)` | Vom Außengerät gemessene Temperatur | Statusfeld 12 |
+| `Klimaanlage` → aktuelle Temperatur | Vom Innengerät gemessene Temperatur | Statusfeld 11 plus Nachkommabits in Feld 15 |
+| `Innentemperatur (Innengerät)` | Derselbe, ausdrücklich sichtbare Messwert | Statusfeld 11 plus Nachkommabits in Feld 15 |
+| `Außentemperatur (Außengerät)` | Vom Außengerät gemessene Temperatur | Statusfeld 12 plus Nachkommabits in Feld 15 |
 
 Die Zuordnung folgt dem Midea-Statuslayout. Sie wird erst endgültig bestätigt,
 wenn ein unverändertes, CRC-gültiges `C0`-Status-Telegramm des KB35 vorliegt;

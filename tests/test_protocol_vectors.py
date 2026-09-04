@@ -43,6 +43,18 @@ def checksum(packet: list[int]) -> int:
     return (-sum(packet[1:-1])) & 0xFF
 
 
+def decode_c0_temperature(encoded: int, decimal_nibble: int, celsius: bool = True) -> float:
+    """Mirror the documented Midea C0 temperature and decimal correction."""
+    result = (encoded - 50) / 2.0
+    if not celsius or decimal_nibble == 0:
+        return result
+    sign = -1.0 if result < 0 else 1.0
+    result += sign * (decimal_nibble / 10.0)
+    if decimal_nibble >= 5:
+        result += sign * 0.5
+    return result
+
+
 class KB35ProtocolVectorsTest(unittest.TestCase):
     def test_golden_get_status_frame_has_version_02_and_valid_checksums(self):
         packet = frame("AA 21 AC 00 00 00 00 00 02 03 41 81 00 FF 03 FF 00 02 00 00 00 00 00 00 00 00 00 00 00 00 03 04 56 0C")
@@ -79,6 +91,13 @@ class KB35ProtocolVectorsTest(unittest.TestCase):
         self.assertTrue(0x80 & 0x80)  # frost: C0 data[21]
         self.assertTrue((0x20 & 0x20) or (0x00 & 0x02))  # turbo: data[8] OR data[10]
         self.assertEqual({"Normal": 0x64, "75 %": 0x4B, "50 %": 0x32}["50 %"], 0x32)
+
+    def test_c0_temperature_uses_fractional_nibbles_in_celsius_mode(self):
+        # Base 24.5 °C plus the documented C0 decimal correction.
+        self.assertAlmostEqual(decode_c0_temperature(99, 4), 24.9)
+        self.assertAlmostEqual(decode_c0_temperature(99, 6), 25.6)
+        # No C0 decimal correction is applied while the status is Fahrenheit.
+        self.assertAlmostEqual(decode_c0_temperature(99, 4, celsius=False), 24.5)
 
 
 if __name__ == "__main__":
