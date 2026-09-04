@@ -1,0 +1,40 @@
+name: KB35 Midea compile
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [tests/kb35-s3.yaml, tests/kb35-c6.yaml]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ESPHome
+        run: pip install esphome==2026.8.2
+      - name: Create dummy secrets
+        run: |
+          cat > tests/secrets.yaml <<'EOF'
+          wifi_ssid: test
+          wifi_password: test-password
+          api_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          ota_password: test-password
+          fallback_password: test-password
+          EOF
+      - name: Validate configuration
+        run: esphome config ${{ matrix.config }}
+      - name: Compile ESP-IDF target
+        run: esphome compile ${{ matrix.config }}
+  vectors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate captured protocol vectors
+        run: python3 -m unittest tests/test_protocol_vectors.py

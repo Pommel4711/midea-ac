@@ -1,0 +1,11 @@
+esphome:
+  name: kb35-s3-test
+  friendly_name: KB35 S3 Test
+
+packages:
+  base: !include kb35-common.yaml
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf

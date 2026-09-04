@@ -1,0 +1,96 @@
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [kb35_midea]
+
+logger:
+  baud_rate: 0
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+uart:
+  id: kb35_uart
+  baud_rate: 9600
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  rx_pin: GPIO18
+  tx_pin: GPIO17
+
+binary_sensor:
+  - platform: template
+    id: communication
+    name: Kommunikation
+
+sensor:
+  - platform: template
+    id: outdoor_temperature
+    name: Außentemperatur
+  - platform: template
+    id: error_code
+    name: Fehlercode
+
+switch:
+  - platform: template
+    id: boost
+    name: Boost
+    optimistic: false
+    turn_on_action: { lambda: id(kb35).set_boost(true); }
+    turn_off_action: { lambda: id(kb35).set_boost(false); }
+  - platform: template
+    id: sleep
+    name: Sleep
+    optimistic: false
+    turn_on_action: { lambda: id(kb35).set_sleep(true); }
+    turn_off_action: { lambda: id(kb35).set_sleep(false); }
+  - platform: template
+    id: frost
+    name: Frostschutz
+    optimistic: false
+    turn_on_action: { lambda: id(kb35).set_frost(true); }
+    turn_off_action: { lambda: id(kb35).set_frost(false); }
+
+select:
+  - platform: template
+    id: gear
+    name: Leistungsbegrenzung
+    options: ["Normal", "75 %", "50 %"]
+    optimistic: true
+    set_action:
+      - lambda: |-
+          id(kb35).set_power_limit(x == "50 %" ? 50 : x == "75 %" ? 75 : 100);
+
+climate:
+  - platform: kb35_midea
+    id: kb35
+    name: Klimaanlage
+    uart_id: kb35_uart
+    visual:
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 1 °C
+    fan: kb35_fan
+    boost_switch: boost
+    sleep_switch: sleep
+    frost_switch: frost
+    outdoor_temperature: outdoor_temperature
+    error_code: error_code
+    communication: communication
+    power_limit_select: gear
+
+fan:
+  - platform: kb35_midea
+    id: kb35_fan
+    name: Lüfter
+    kb35_id: kb35

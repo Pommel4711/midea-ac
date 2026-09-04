@@ -1,0 +1,33 @@
+# Beispiel: Diese Datei in ESPHome anlegen, Daten einsetzen und kompilieren.
+# Das Paket ist absichtlich genauso aufgebaut wie Pommel/TCL: Die persönliche
+# Konfiguration bleibt klein; die eigentliche Logik lädt von GitHub nach.
+substitutions:
+  device_name: splitanlage_1og
+  friendly_name: Splitanlage 1. OG
+
+  # Nach dem Push beide Werte auf DEIN eigenes GitHub-Repository setzen.
+  kb35_repository_url: https://github.com/DEIN-GITHUB-NAME/kb35-midea-esphome.git
+  kb35_repository_ref: main
+
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  api_key: !secret api_key
+  ota_password: !secret ota_password
+  fallback_password: !secret fallback_password
+
+  # UART der Klimaanlage: TX der Anlage → RX des ESP, RX der Anlage → TX des ESP.
+  uart_rx: GPIO3
+  uart_tx: GPIO1
+
+packages:
+  remote_package:
+    url: ${kb35_repository_url}
+    ref: ${kb35_repository_ref}
+    files:
+      - packages/kb35_core.yaml
+    refresh: 1d
+
+esp32:
+  variant: ESP32S3
+  framework:
+    type: esp-idf

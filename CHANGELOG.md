@@ -8,8 +8,10 @@ Analyse und einer ausdrücklichen Entscheidung eingetragen.
 
 ### Hinzugefügt
 
+- Ein ESPHome-Remote-Package mit externer, ESP-IDF-fähiger KB35-Midea-Komponente.
 - Initiale, responsive KB35-Lovelace-Karte mit Temperatur- und Lüfterrad.
 - Umschaltung zwischen Solltemperatur und Prozentlüfter inklusive `Auto`.
-- Schnellschalter für Display, Boost, Sleep und Frostschutz.
-- Ausklappbare Betriebsart-, Swing- und Leistungsbegrenzungssteuerung.
+- SmartKey-ähnliche, von unten aufgleitende Schnellauswahl mit Funktionsraster.
+- Innen- und Außentemperatur, Diagnose, Boost, Sleep, Frostschutz und Gear.
+- CI für ESP32-S3/C6 mit ESP-IDF sowie getestete Protokollvektoren.
 - Reiner Analyse-Workflow für das Pommel/TCL-Referenzrepository.

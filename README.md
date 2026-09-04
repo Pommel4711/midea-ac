@@ -1,22 +1,60 @@
-# KB35 Climate Dashboard
+# KB35 Midea ESPHome-Paket & Dashboard
 
-Eine aufgeräumte, deutschsprachige Home-Assistant-Oberfläche für die
-Kältebringer **KB35-12000BTU** mit Midea-UART-Anbindung. Sie zeigt eine große,
-direkte Bedienung statt einer langen Standard-Entitätenliste:
+Ein einzelnes, GitHub-fähiges Projekt für die Kältebringer
+**KB35-12000BTU**: ein ESPHome-Remote-Package für den ESP und eine passende
+Home-Assistant-Oberfläche. Es ist **keine HACS-Integration**.
 
-- Umschaltbares Rad für **Solltemperatur (17–30 °C)** und **Lüfter (1–100 %)**
+Das ESPHome-Paket folgt bewusst der Pommel-Struktur: Die individuelle
+Geräte-YAML bleibt klein und lädt `packages/kb35_core.yaml` plus die externe
+Komponente aus deinem GitHub-Repository. Der ESP braucht dazu ESP-IDF und
+spricht direkt Midea-UART mit 9600 8N1 und Controller-Protokoll `0x02`.
+
+Die Dashboard-Karte bietet:
+
+- Umschaltbares Rad für **Solltemperatur (16–30 °C)** und **Lüfter (0–100 %)**
 - Lüfter-Preset **Auto** (KB35-Protokollwert 102)
-- Moduswahl, Swing und Leistungsbegrenzung als aufklappbare Auswahlfelder
-- Schnelltasten für Display, Boost, Sleep und Frostschutz
+- Innen- und Außentemperatur direkt oberhalb des Rads
+- Einen nach oben gleitenden **Schnellauswahl-Bogen**, passend zur SmartKey-App
 - Temperaturverlauf und Kommunikations-/Fehlerdiagnose
 
-Das Projekt ist absichtlich unabhängig von der ESPHome-Komponente. Es wird
-fertig nutzbar, sobald der KB35-Midea-Treiber die in
-[docs/ENTITY-CONTRACT.md](docs/ENTITY-CONTRACT.md) beschriebenen Entitäten
-bereitstellt. Der mitgelieferte Pommel/TCL-Klon ist nur eine
-Strukturreferenz – sein UART-Protokoll wird nicht verwendet.
+Pommel/TCL ist ausschließlich eine Strukturreferenz. Sein UART-Protokoll wird
+nicht verwendet.
 
-## Installation
+## Was wird gepusht?
+
+**Das gesamte Verzeichnis `kb35-climate-dashboard` ist das eine Repository.**
+Es enthält die ESPHome-Komponente, das Package, die Musterkonfiguration und
+das Dashboard. Nach dem Anlegen eines leeren GitHub-Repositories:
+
+```powershell
+cd "C:\Users\Philipp\Documents\Arduino\Home Assistant\klimaanlagen\kb35-climate-dashboard"
+git remote add origin https://github.com/DEIN-GITHUB-NAME/kb35-midea-esphome.git
+git push -u origin main
+```
+
+Danach muss in [`KB35-Conditioner.yaml`](KB35-Conditioner.yaml) nur noch
+`kb35_repository_url` auf genau diese GitHub-Adresse gesetzt werden.
+
+## ESPHome einrichten
+
+1. Kopiere [`KB35-Conditioner.yaml`](KB35-Conditioner.yaml) in deinen
+   ESPHome-Konfigurationsordner.
+2. Setze GitHub-URL, WLAN/API/OTA-Secrets und die beiden UART-GPIOs.
+3. Wähle dein Board; die Vorlage ist ESP32-S3/ESP-IDF. Für C6 ersetze den
+   Board-Wert durch `esp32-c6-devkitc-1` und behalte `type: esp-idf`.
+4. Kompiliere und flashe in ESPHome. Das Paket erzeugt unter **einem Gerät**:
+   Climate, Prozentlüfter, Boost, Sleep, Frostschutz, Piepton,
+   Leistungsbegrenzung, Innen-/Außentemperatur, Fehlercode und Kommunikation.
+5. `web_server: version: 3` ist im Paket bereits aktiv. Damit bietet der ESP
+   zusätzlich eine funktionale Geräteoberfläche im Browser; die große
+   Kreisoberfläche ist die Home-Assistant-Karte.
+
+Remote-Packages und externe Komponenten sind die dafür vorgesehene
+ESPHome-Mechanik. Die Konfiguration folgt der aktuellen
+[ESPHome-Package-Dokumentation](https://esphome.io/components/packages/) und
+[External-Components-Dokumentation](https://esphome.io/components/external_components/).
+
+## Home-Assistant-Dashboard installieren
 
 1. Kopiere `kb35-climate-dashboard-card.js` nach
    `/config/www/kb35-climate-dashboard-card.js`.
@@ -44,9 +82,13 @@ Die beiden Tabs oberhalb des Rads schalten den Bedienfokus um:
   `fan.set_percentage`; mit **Auto** wird das konfigurierbare Preset `Auto`
   gewählt.
 
-Unter dem Rad stehen die vier häufigen Sonderfunktionen. „Mehr Einstellungen“
-enthält Dropdowns für Betriebsart, Swing und Leistungsbegrenzung sowie den
-optionalen Piepton. Frostschutz lässt sich nur im Heizmodus aktivieren.
+Unter dem Rad öffnet **Schnellauswahl** ein von unten hochfahrendes Bedienblatt,
+wie in der originalen SmartKey-App. Es enthält Lüfter, beide Swing-Achsen,
+Gear, Boost, Sleep, Frostschutz und die weiteren Funktionsplätze. Nicht durch
+KB35-Mitschnitte gedeckte Punkte bleiben sichtbar, aber bewusst deaktiviert.
+Das Bedienblatt enthält auch die Auswahlfelder für Betriebsart, Swing,
+Leistungsbegrenzung und den optionalen Piepton. Frostschutz lässt sich nur im
+Heizmodus aktivieren.
 
 ## Entitäten
 
@@ -55,6 +97,20 @@ Alle Zuordnungen stehen zentral am Anfang von
 bleibt die Karte auch dann unverändert, wenn ESPHome nach der Installation
 abweichende Entity IDs erzeugt. Der vollständige Vertrag ist in
 [docs/ENTITY-CONTRACT.md](docs/ENTITY-CONTRACT.md) dokumentiert.
+
+## Funktionsstand
+
+| Fertig implementiert | Bewusst noch deaktiviert |
+| --- | --- |
+| Ein/Aus, Auto, Kühlen, Entfeuchten, Heizen, Nur Lüfter | LED-Display-Toggle |
+| Solltemperatur 16–30 °C, Innen- und Außentemperatur | Schnellstart |
+| Lüfter 0–100 % und `Auto` (102) | Feste Luftrichtungen |
+| Vertikal-/Horizontal-Swing, Boost, Sleep, Frostschutz | Schlafkurve mit Dauer |
+| Gear: Normal / 75 % / 50 %, Piepton | Nativer Zeitplan |
+
+Die rechte Spalte bleibt in der Schnellauswahl sichtbar, ist aber absichtlich
+nicht anklickbar. Welche KB35-Daten dafür noch fehlen, steht in
+[docs/OPEN_PROTOCOL_QUESTIONS.md](docs/OPEN_PROTOCOL_QUESTIONS.md).
 
 ## Änderungen aus Referenzen erst analysieren
 
@@ -72,20 +128,10 @@ Projekt. Danach kann die Änderung anhand des Berichts bewertet und bei Bedarf
 gezielt übernommen werden. Bereits übernommene Änderungen gehören in
 [CHANGELOG.md](CHANGELOG.md).
 
-## GitHub
+## Prüfung
 
-Das Verzeichnis `kb35-climate-dashboard` ist ein eigenes Git-Repository. Nach
-dem Anlegen eines leeren GitHub-Repositories kannst du es beispielsweise so
-verbinden:
-
-```powershell
-git remote add origin https://github.com/DEIN-NAME/kb35-climate-dashboard.git
-git push -u origin main
-```
-
-## Status
-
-Die Benutzeroberfläche und der Integrationsvertrag sind fertig. Die Midea
-UART-/ESPHome-Komponente ist ein separates Vorhaben und muss die echten
-KB35-Mitschnitte (9600 8N1, `0x02`, `0x40`/`0x41`/`C0`, A0-Echo) umsetzen und
-am Gerät bestätigen, bevor diese Karte die Anlage tatsächlich steuern kann.
+`tests/test_protocol_vectors.py` prüft die übergebenen Frame- und Bitvektoren.
+GitHub Actions validiert und kompiliert die echte ESPHome-Komponente für
+ESP32-S3 und ESP32-C6 jeweils mit ESP-IDF. Die lokale Vollkompilierung ist auf
+diesem Rechner nicht möglich, weil nur Python 3.10 installiert ist, ESPHome
+2026.8.2 aber Python 3.12 verlangt.

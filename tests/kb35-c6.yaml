@@ -1,0 +1,11 @@
+packages:
+  base: !include kb35-common.yaml
+
+esphome:
+  name: kb35-c6-test
+  friendly_name: KB35 C6 Test
+
+esp32:
+  board: esp32-c6-devkitc-1
+  framework:
+    type: esp-idf

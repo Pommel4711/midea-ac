@@ -3,6 +3,8 @@
 secrets.yaml
 *.log
 reports/
+.esphome/
+__pycache__/
 
 # Editor and operating-system files
 .vscode/

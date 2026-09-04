@@ -15,8 +15,11 @@ views:
             climate_entity: climate.splitanlage_1og
             fan_entity: fan.splitanlage_1og_luefter
             fan_auto_preset: Auto
+            temperature_min: 16
+            temperature_max: 30
             switches:
-              display: switch.splitanlage_1og_display
+              # Das LED-Toggle ist erst nach einem KB35-Frame-Mitschnitt aktiv.
+              display: null
               boost: switch.splitanlage_1og_boost
               sleep: switch.splitanlage_1og_sleep
               frost: switch.splitanlage_1og_frostschutz

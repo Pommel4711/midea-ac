@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-const KB35_CARD_VERSION = "0.1.0";
+const KB35_CARD_VERSION = "0.2.0";
 
 const DEFAULTS = {
   title: "Splitanlage",
   fan_auto_preset: "Auto",
-  temperature_min: 17,
+  temperature_min: 16,
   temperature_max: 30,
   switches: {
     display: null,
@@ -52,6 +52,23 @@ const SWITCH_META = {
   beeper: { label: "Piepton", icon: "mdi:volume-high" },
 };
 
+// The original SmartKey presents these actions in one bottom sheet. Actions
+// marked "awaiting_capture" deliberately stay disabled until a KB35 frame is
+// captured; the card must never make up protocol commands for them.
+const QUICK_ACTIONS = [
+  { key: "fan", label: "Lüfter", icon: "mdi:fan", action: "fan" },
+  { key: "quickstart", label: "Schnellstart", icon: "mdi:heart-outline", action: "awaiting_capture" },
+  { key: "horizontal_swing", label: "Links ↔ rechts", icon: "mdi:arrow-left-right", action: "horizontal_swing" },
+  { key: "vertical_swing", label: "Oben ↕ unten", icon: "mdi:arrow-up-down", action: "vertical_swing" },
+  { key: "gear", label: "Gang", icon: "mdi:gauge", action: "power_limit" },
+  { key: "air_direction", label: "Luftrichtung", icon: "mdi:directions-fork", action: "awaiting_capture" },
+  { key: "boost", label: "Boost", icon: "mdi:rocket-launch-outline", action: "switch" },
+  { key: "sleep", label: "Sleep", icon: "mdi:power-sleep", action: "switch" },
+  { key: "frost", label: "Frostschutz", icon: "mdi:snowflake-thermometer", action: "switch" },
+  { key: "display", label: "LED", icon: "mdi:led-outline", action: "switch" },
+  { key: "schedule", label: "Zeitplan", icon: "mdi:calendar-clock-outline", action: "awaiting_capture" },
+];
+
 const MODE_META = {
   off: { label: "Aus", icon: "mdi:power" },
   auto: { label: "Auto", icon: "mdi:refresh-auto" },
@@ -71,6 +88,7 @@ class KB35ClimateDashboardCard extends HTMLElement {
     this._draftValue = null;
     this._dragging = false;
     this._notice = "";
+    this._sheetOpen = false;
     this._config = null;
     this._hass = null;
   }
@@ -126,6 +144,7 @@ class KB35ClimateDashboardCard extends HTMLElement {
           box-shadow: var(--ha-card-box-shadow, 0 3px 8px rgba(0, 0, 0, .18));
           color: var(--primary-text-color);
           overflow: hidden;
+          position: relative;
         }
         button, select { font: inherit; }
         button { color: inherit; cursor: pointer; }
@@ -226,6 +245,56 @@ class KB35ClimateDashboardCard extends HTMLElement {
         }
         .step:active { background: var(--kb35-accent); color: #fff; }
         .step ha-icon { --mdc-icon-size: 19px; }
+        .quick-open {
+          align-items: center;
+          background: color-mix(in srgb, var(--secondary-background-color, #777) 58%, transparent);
+          border: 1px solid color-mix(in srgb, var(--divider-color) 65%, transparent);
+          border-radius: 16px;
+          display: flex;
+          font-size: .89rem;
+          font-weight: 750;
+          gap: 10px;
+          justify-content: space-between;
+          margin-top: 2px;
+          min-height: 54px;
+          padding: 0 15px;
+          text-align: left;
+          width: 100%;
+        }
+        .quick-open ha-icon { --mdc-icon-size: 23px; }
+        .quick-open .quick-open-start { align-items: center; display: flex; gap: 10px; }
+        .quick-open .chevron { color: var(--secondary-text-color); }
+        .sheet-backdrop {
+          background: color-mix(in srgb, #000 34%, transparent);
+          inset: 0;
+          opacity: 0;
+          pointer-events: none;
+          position: absolute;
+          transition: opacity .22s ease;
+          z-index: 3;
+        }
+        .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+        .quick-sheet {
+          background: var(--ha-card-background, var(--card-background-color));
+          border: 1px solid color-mix(in srgb, var(--kb35-accent) 25%, var(--divider-color));
+          border-radius: 25px 25px 0 0;
+          bottom: 0;
+          box-shadow: 0 -10px 35px rgba(0, 0, 0, .28);
+          max-height: 93%;
+          overflow: auto;
+          padding: 13px 18px 20px;
+          position: absolute;
+          transform: translateY(105%);
+          transition: transform .27s cubic-bezier(.2, .8, .2, 1);
+          width: 100%;
+        }
+        .sheet-backdrop.open .quick-sheet { transform: translateY(0); }
+        .sheet-head { align-items: center; display: flex; justify-content: space-between; margin-bottom: 13px; }
+        .sheet-handle { background: var(--divider-color); border-radius: 999px; height: 4px; left: 50%; position: absolute; top: 7px; transform: translateX(-50%); width: 42px; }
+        .sheet-title { font-size: 1.02rem; font-weight: 800; margin: 8px 0 0; }
+        .sheet-close { align-items: center; background: color-mix(in srgb, var(--secondary-background-color, #777) 65%, transparent); border: 0; border-radius: 50%; display: flex; height: 35px; justify-content: center; width: 35px; }
+        .sheet-close ha-icon { --mdc-icon-size: 20px; }
+        .sheet-section-title { color: var(--secondary-text-color); display: block; font-size: .73rem; font-weight: 800; letter-spacing: .07em; margin: 15px 0 8px; text-transform: uppercase; }
         .auto-button {
           background: transparent;
           border: 1px solid color-mix(in srgb, var(--kb35-accent) 55%, var(--divider-color));
@@ -234,13 +303,13 @@ class KB35ClimateDashboardCard extends HTMLElement {
           font-size: .76rem;
           font-weight: 800;
           letter-spacing: .04em;
-          margin-top: 9px;
-          min-height: 28px;
+          margin: 0;
+          min-height: 40px;
           padding: 0 12px;
+          width: 100%;
         }
-        .auto-button[hidden] { display: none; }
         .auto-button.active { background: var(--kb35-accent); color: #fff; }
-        .quick-actions { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 3px; }
+        .quick-actions { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .quick {
           align-items: center;
           background: color-mix(in srgb, var(--secondary-background-color, #777) 58%, transparent);
@@ -261,12 +330,7 @@ class KB35ClimateDashboardCard extends HTMLElement {
         .quick ha-icon { --mdc-icon-size: 22px; }
         .notice { color: var(--error-color, #db4437); font-size: .8rem; line-height: 1.35; margin: 12px 2px 0; min-height: 0; }
         .notice:empty { display: none; }
-        details { border-top: 1px solid var(--divider-color); margin-top: 17px; padding-top: 13px; }
-        summary { align-items: center; color: var(--secondary-text-color); cursor: pointer; display: flex; font-size: .86rem; font-weight: 700; justify-content: space-between; list-style: none; }
-        summary::-webkit-details-marker { display: none; }
-        summary ha-icon { --mdc-icon-size: 20px; transition: transform .2s; }
-        details[open] summary ha-icon { transform: rotate(180deg); }
-        .settings { display: grid; gap: 11px; margin-top: 15px; }
+        .settings { display: grid; gap: 11px; }
         .setting { align-items: center; display: grid; gap: 10px; grid-template-columns: 31px minmax(0, 1fr); }
         .setting ha-icon { color: var(--secondary-text-color); --mdc-icon-size: 21px; }
         .setting-copy { min-width: 0; }
@@ -303,7 +367,7 @@ class KB35ClimateDashboardCard extends HTMLElement {
           </header>
 
           <div class="metrics">
-            <div class="metric"><span class="metric-label">Raum</span><span id="current-temp" class="metric-value">–</span></div>
+            <div class="metric"><span class="metric-label">Innen</span><span id="current-temp" class="metric-value">–</span></div>
             <div class="metric"><span class="metric-label">Außen</span><span id="outdoor-temp" class="metric-value">–</span></div>
             <div class="metric"><span class="metric-label">Betrieb</span><span id="mode-value" class="metric-value">–</span></div>
           </div>
@@ -325,16 +389,29 @@ class KB35ClimateDashboardCard extends HTMLElement {
                   <button class="step" data-step="-1" type="button" aria-label="Wert verringern"><ha-icon icon="mdi:minus"></ha-icon></button>
                   <button class="step" data-step="1" type="button" aria-label="Wert erhöhen"><ha-icon icon="mdi:plus"></ha-icon></button>
                 </div>
-                <button id="auto" class="auto-button" type="button">AUTO</button>
               </div>
             </div>
           </div>
 
-          <div id="quick-actions" class="quick-actions"></div>
+          <button id="quick-open" class="quick-open" type="button" aria-expanded="false">
+            <span class="quick-open-start"><ha-icon icon="mdi:tune-variant"></ha-icon>Schnellauswahl</span>
+            <ha-icon class="chevron" icon="mdi:chevron-up"></ha-icon>
+          </button>
           <p id="notice" class="notice" role="status"></p>
-
-          <details>
-            <summary>Mehr Einstellungen <ha-icon icon="mdi:chevron-down"></ha-icon></summary>
+          <div class="footer">KB35 Dashboard · v${KB35_CARD_VERSION}</div>
+        </main>
+        <div id="sheet-backdrop" class="sheet-backdrop" aria-hidden="true">
+          <section class="quick-sheet" role="dialog" aria-modal="true" aria-label="Schnellauswahl">
+            <span class="sheet-handle"></span>
+            <header class="sheet-head">
+              <h3 class="sheet-title">Schnellauswahl</h3>
+              <button id="sheet-close" class="sheet-close" type="button" aria-label="Schnellauswahl schließen"><ha-icon icon="mdi:close"></ha-icon></button>
+            </header>
+            <span class="sheet-section-title">Lüfter</span>
+            <button id="auto" class="auto-button" type="button">AUTO</button>
+            <span class="sheet-section-title">Funktionen</span>
+            <div id="quick-actions" class="quick-actions"></div>
+            <span class="sheet-section-title">Betrieb</span>
             <div class="settings">
               <div class="setting">
                 <ha-icon icon="mdi:air-conditioner"></ha-icon>
@@ -350,9 +427,8 @@ class KB35ClimateDashboardCard extends HTMLElement {
               </div>
               <button id="beeper" class="quick" type="button" hidden><ha-icon icon="mdi:volume-high"></ha-icon><span>Piepton</span></button>
             </div>
-          </details>
-          <div class="footer">KB35 Dashboard · v${KB35_CARD_VERSION}</div>
-        </main>
+          </section>
+        </div>
       </ha-card>
     `;
 
@@ -371,8 +447,11 @@ class KB35ClimateDashboardCard extends HTMLElement {
       dialValue: this.shadowRoot.querySelector("#dial-value"),
       dialSubtitle: this.shadowRoot.querySelector("#dial-subtitle"),
       auto: this.shadowRoot.querySelector("#auto"),
+      quickOpen: this.shadowRoot.querySelector("#quick-open"),
       quickActions: this.shadowRoot.querySelector("#quick-actions"),
       notice: this.shadowRoot.querySelector("#notice"),
+      sheetBackdrop: this.shadowRoot.querySelector("#sheet-backdrop"),
+      sheetClose: this.shadowRoot.querySelector("#sheet-close"),
       hvacSelect: this.shadowRoot.querySelector("#hvac-select"),
       swingSelect: this.shadowRoot.querySelector("#swing-select"),
       powerLimitRow: this.shadowRoot.querySelector("#power-limit-row"),
@@ -396,6 +475,11 @@ class KB35ClimateDashboardCard extends HTMLElement {
 
     this._elements.power.addEventListener("click", () => this._togglePower());
     this._elements.auto.addEventListener("click", () => this._setFanAuto());
+    this._elements.quickOpen.addEventListener("click", () => this._setSheetOpen(true));
+    this._elements.sheetClose.addEventListener("click", () => this._setSheetOpen(false));
+    this._elements.sheetBackdrop.addEventListener("click", (event) => {
+      if (event.target === this._elements.sheetBackdrop) this._setSheetOpen(false);
+    });
     this.shadowRoot.querySelectorAll("[data-step]").forEach((button) => {
       button.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -432,14 +516,13 @@ class KB35ClimateDashboardCard extends HTMLElement {
 
   _createQuickActions() {
     this._elements.quickActions.replaceChildren();
-    ["display", "boost", "sleep", "frost"].forEach((key) => {
-      const meta = SWITCH_META[key];
+    QUICK_ACTIONS.forEach((meta) => {
       const button = document.createElement("button");
       button.className = "quick";
       button.type = "button";
-      button.dataset.switchKey = key;
+      button.dataset.quickKey = meta.key;
       button.innerHTML = `<ha-icon icon="${meta.icon}"></ha-icon><span>${meta.label}</span>`;
-      button.addEventListener("click", () => this._toggleSwitch(key));
+      button.addEventListener("click", () => this._handleQuickAction(meta));
       this._elements.quickActions.append(button);
     });
   }
@@ -472,16 +555,19 @@ class KB35ClimateDashboardCard extends HTMLElement {
     this._renderDial(climate, fan);
     this._renderQuickActions(climateState);
     this._renderSelects(climate);
+    this._elements.sheetBackdrop.classList.toggle("open", this._sheetOpen);
+    this._elements.sheetBackdrop.setAttribute("aria-hidden", String(!this._sheetOpen));
+    this._elements.quickOpen.setAttribute("aria-expanded", String(this._sheetOpen));
     this._elements.notice.textContent = this._notice;
   }
 
   _renderDial(climate, fan) {
     const temperatureMode = this._activeDial === "temperature";
-    const min = temperatureMode ? this._config.temperature_min : 1;
+    const min = temperatureMode ? this._config.temperature_min : 0;
     const max = temperatureMode ? this._config.temperature_max : 100;
     const climateTemperature = this._number(climate?.attributes?.temperature, this._config.temperature_min);
     const fanAuto = this._isFanAuto(fan);
-    const fanPercentage = this._number(fan?.attributes?.percentage, 1);
+    const fanPercentage = this._number(fan?.attributes?.percentage, 0);
     const actual = temperatureMode ? climateTemperature : (fanAuto ? fanPercentage : fanPercentage);
     const value = this._draftValue === null ? actual : this._draftValue;
     const progress = this._clamp((value - min) / (max - min), 0, 1);
@@ -501,22 +587,50 @@ class KB35ClimateDashboardCard extends HTMLElement {
     this._elements.dialSubtitle.textContent = temperatureMode
       ? `Ist: ${this._temperatureText(climate?.attributes?.current_temperature)}`
       : (fanAuto ? "Automatische Lüfterregelung" : "Manuelle Lüfterregelung");
-    this._elements.auto.hidden = temperatureMode;
     this._elements.auto.classList.toggle("active", fanAuto);
     this._elements.auto.textContent = fanAuto ? "AUTO AKTIV" : "AUTO";
   }
 
   _renderQuickActions(climateState) {
-    this.shadowRoot.querySelectorAll("[data-switch-key]").forEach((button) => {
-      const key = button.dataset.switchKey;
-      const entity = this._config.switches[key];
-      const state = this._entity(entity)?.state;
-      const available = Boolean(entity) && state !== "unavailable" && state !== "unknown";
-      const frostBlocked = key === "frost" && state !== "on" && climateState !== "heat";
-      button.hidden = !entity;
-      button.disabled = !available || frostBlocked;
-      button.classList.toggle("on", state === "on");
-      button.title = frostBlocked ? "Frostschutz kann nur im Heizmodus aktiviert werden" : "";
+    this.shadowRoot.querySelectorAll("[data-quick-key]").forEach((button) => {
+      const meta = QUICK_ACTIONS.find((item) => item.key === button.dataset.quickKey);
+      if (!meta) return;
+      const switchEntity = this._entity(this._config.switches[meta.key]);
+      const switchState = switchEntity?.state;
+      const climate = this._entity(this._config.climate_entity);
+      const fan = this._entity(this._config.fan_entity);
+      const swing = climate?.attributes?.swing_mode || "off";
+      const hasSwing = (climate?.attributes?.swing_modes || []).length > 0;
+      let enabled = true;
+      let active = false;
+      let title = "";
+
+      if (meta.action === "awaiting_capture") {
+        enabled = false;
+        title = "Für diese KB35-Funktion fehlt noch ein verifizierter Sendeframe.";
+      } else if (meta.action === "switch") {
+        enabled = Boolean(switchEntity) && !["unavailable", "unknown"].includes(switchState);
+        active = switchState === "on";
+        if (meta.key === "frost" && switchState !== "on" && climateState !== "heat") {
+          enabled = false;
+          title = "Frostschutz kann nur im Heizmodus aktiviert werden.";
+        }
+      } else if (meta.action === "fan") {
+        enabled = Boolean(fan) && !["unavailable", "unknown"].includes(fan.state);
+        active = this._activeDial === "fan";
+      } else if (meta.action === "horizontal_swing") {
+        enabled = Boolean(climate) && hasSwing;
+        active = swing === "horizontal" || swing === "both";
+      } else if (meta.action === "vertical_swing") {
+        enabled = Boolean(climate) && hasSwing;
+        active = swing === "vertical" || swing === "both";
+      } else if (meta.action === "power_limit") {
+        enabled = Boolean(this._config.selects.power_limit) && !["unavailable", "unknown"].includes(this._entity(this._config.selects.power_limit)?.state);
+      }
+
+      button.disabled = !enabled;
+      button.classList.toggle("on", active);
+      button.title = title;
     });
 
     const beeperEntity = this._config.switches.beeper;
@@ -594,7 +708,7 @@ class KB35ClimateDashboardCard extends HTMLElement {
     let angle = Math.atan2(y, x) * (180 / Math.PI);
     if (angle < 135) angle += 360;
     angle = this._clamp(angle, 135, 405);
-    const min = this._activeDial === "temperature" ? this._config.temperature_min : 1;
+    const min = this._activeDial === "temperature" ? this._config.temperature_min : 0;
     const max = this._activeDial === "temperature" ? this._config.temperature_max : 100;
     this._draftValue = Math.round(min + ((angle - 135) / 270) * (max - min));
     this._notice = "";
@@ -617,8 +731,8 @@ class KB35ClimateDashboardCard extends HTMLElement {
     const fan = this._entity(this._config.fan_entity);
     const base = this._activeDial === "temperature"
       ? this._number(climate?.attributes?.temperature, this._config.temperature_min)
-      : this._number(fan?.attributes?.percentage, 1);
-    const min = this._activeDial === "temperature" ? this._config.temperature_min : 1;
+      : this._number(fan?.attributes?.percentage, 0);
+    const min = this._activeDial === "temperature" ? this._config.temperature_min : 0;
     const max = this._activeDial === "temperature" ? this._config.temperature_max : 100;
     const next = this._clamp((this._draftValue === null ? base : this._draftValue) + delta, min, max);
     this._draftValue = null;
@@ -667,6 +781,53 @@ class KB35ClimateDashboardCard extends HTMLElement {
     }
     this._notice = "";
     this._call("switch", "toggle", { entity_id: entity });
+  }
+
+  _handleQuickAction(meta) {
+    if (meta.action === "fan") {
+      this._activeDial = "fan";
+      this._draftValue = null;
+      this._setSheetOpen(false);
+      return;
+    }
+    if (meta.action === "switch") {
+      this._toggleSwitch(meta.key);
+      return;
+    }
+    if (meta.action === "horizontal_swing") {
+      this._toggleSwingAxis("horizontal");
+      return;
+    }
+    if (meta.action === "vertical_swing") {
+      this._toggleSwingAxis("vertical");
+      return;
+    }
+    if (meta.action === "power_limit") {
+      this._elements.powerLimitSelect.focus();
+      this._notice = "Gang unten im Auswahlfeld wählen.";
+      this._render();
+    }
+  }
+
+  _toggleSwingAxis(axis) {
+    const climate = this._entity(this._config.climate_entity);
+    const current = climate?.attributes?.swing_mode || "off";
+    let next = "off";
+    if (axis === "horizontal") {
+      next = ({ off: "horizontal", horizontal: "off", vertical: "both", both: "vertical" })[current] || "horizontal";
+    } else {
+      next = ({ off: "vertical", vertical: "off", horizontal: "both", both: "horizontal" })[current] || "vertical";
+    }
+    this._notice = "";
+    this._call("climate", "set_swing_mode", {
+      entity_id: this._config.climate_entity,
+      swing_mode: next,
+    });
+  }
+
+  _setSheetOpen(open) {
+    this._sheetOpen = open;
+    this._render();
   }
 
   _call(domain, service, data) {

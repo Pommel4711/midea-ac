@@ -1,0 +1,153 @@
+# Kältebringer KB35-12000BTU / Midea UART core package.
+# This is an ESPHome remote package, not a HACS integration.
+# The caller supplies kb35_repository_url/ref so the external component and
+# this package always come from the same, reviewable Git revision.
+
+external_components:
+  - source:
+      type: git
+      url: ${kb35_repository_url}
+      ref: ${kb35_repository_ref}
+    components: [kb35_midea]
+    refresh: 1d
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.8.2
+
+logger:
+  baud_rate: 0
+
+uart:
+  id: kb35_uart
+  baud_rate: 9600
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  rx_pin: ${uart_rx}
+  tx_pin: ${uart_tx}
+
+api:
+  encryption:
+    key: ${api_key}
+
+ota:
+  - platform: esphome
+    password: ${ota_password}
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: ${fallback_password}
+
+captive_portal:
+
+# Native ESPHome device UI. It exposes the same climate/fan/switch/select
+# entities in a browser; the richer circular UI remains the HA dashboard card.
+web_server:
+  version: 3
+
+binary_sensor:
+  - platform: template
+    id: kb35_communication
+    name: Kommunikation
+    entity_category: diagnostic
+
+sensor:
+  - platform: template
+    id: kb35_outdoor_temperature
+    name: Außentemperatur
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+  - platform: template
+    id: kb35_error_code
+    name: Fehlercode
+    entity_category: diagnostic
+    accuracy_decimals: 0
+
+switch:
+  - platform: template
+    id: kb35_boost
+    name: Boost
+    icon: mdi:rocket-launch-outline
+    optimistic: false
+    turn_on_action:
+      - lambda: id(kb35_climate).set_boost(true);
+    turn_off_action:
+      - lambda: id(kb35_climate).set_boost(false);
+  - platform: template
+    id: kb35_sleep
+    name: Sleep
+    icon: mdi:power-sleep
+    optimistic: false
+    turn_on_action:
+      - lambda: id(kb35_climate).set_sleep(true);
+    turn_off_action:
+      - lambda: id(kb35_climate).set_sleep(false);
+  - platform: template
+    id: kb35_frostschutz
+    name: Frostschutz
+    icon: mdi:snowflake-thermometer
+    optimistic: false
+    turn_on_action:
+      - lambda: id(kb35_climate).set_frost(true);
+    turn_off_action:
+      - lambda: id(kb35_climate).set_frost(false);
+  - platform: template
+    id: kb35_piepton
+    name: Piepton
+    icon: mdi:volume-high
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: id(kb35_climate).set_beeper(true);
+    turn_off_action:
+      - lambda: id(kb35_climate).set_beeper(false);
+
+select:
+  - platform: template
+    id: kb35_leistungsbegrenzung
+    name: Leistungsbegrenzung
+    icon: mdi:gauge
+    options: ["Normal", "75 %", "50 %"]
+    optimistic: false
+    set_action:
+      - lambda: |-
+          if (x == "50 %") {
+            id(kb35_climate).set_power_limit(50);
+          } else if (x == "75 %") {
+            id(kb35_climate).set_power_limit(75);
+          } else {
+            id(kb35_climate).set_power_limit(100);
+          }
+
+climate:
+  - platform: kb35_midea
+    id: kb35_climate
+    name: Klimaanlage
+    uart_id: kb35_uart
+    protocol_version: 2
+    visual:
+      min_temperature: 16 °C
+      max_temperature: 30 °C
+      temperature_step: 1 °C
+    fan: kb35_fan
+    boost_switch: kb35_boost
+    sleep_switch: kb35_sleep
+    frost_switch: kb35_frostschutz
+    outdoor_temperature: kb35_outdoor_temperature
+    error_code: kb35_error_code
+    communication: kb35_communication
+    power_limit_select: kb35_leistungsbegrenzung
+
+fan:
+  - platform: kb35_midea
+    id: kb35_fan
+    name: Lüfter
+    kb35_id: kb35_climate
