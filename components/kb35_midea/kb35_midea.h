@@ -75,6 +75,8 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   bool ready_for_control_(const char *feature);
   void set_mode_(climate::ClimateMode mode);
   climate::ClimateMode mode_from_payload_() const;
+  bool set_native_fan_mode_(climate::ClimateFanMode mode);
+  climate::ClimateFanMode native_fan_mode_from_payload_() const;
   void set_swing_(climate::ClimateSwingMode swing);
   climate::ClimateSwingMode swing_from_payload_() const;
   static uint8_t clamp_fan_(uint8_t speed);

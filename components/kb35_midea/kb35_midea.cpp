@@ -60,6 +60,7 @@ void KB35MideaClimate::setup() {
   this->reset_rx_();
   this->check_uart_settings(9600, 1, uart::UART_CONFIG_PARITY_NONE, 8);
   this->mode = climate::CLIMATE_MODE_OFF;
+  this->fan_mode = climate::CLIMATE_FAN_AUTO;
   this->target_temperature = 24.0f;
   this->swing_mode = climate::CLIMATE_SWING_OFF;
   if (this->communication_sensor_ != nullptr) this->communication_sensor_->publish_state(false);
@@ -83,6 +84,13 @@ climate::ClimateTraits KB35MideaClimate::traits() {
   traits.add_supported_mode(climate::CLIMATE_MODE_DRY);
   traits.add_supported_mode(climate::CLIMATE_MODE_HEAT);
   traits.add_supported_mode(climate::CLIMATE_MODE_FAN_ONLY);
+  // These modes are presented by Home Assistant's native climate dialog. For
+  // exact 0–100 % control, the linked native fan entity is used instead.
+  traits.add_supported_fan_mode(climate::CLIMATE_FAN_OFF);
+  traits.add_supported_fan_mode(climate::CLIMATE_FAN_AUTO);
+  traits.add_supported_fan_mode(climate::CLIMATE_FAN_LOW);
+  traits.add_supported_fan_mode(climate::CLIMATE_FAN_MEDIUM);
+  traits.add_supported_fan_mode(climate::CLIMATE_FAN_HIGH);
   traits.add_supported_swing_mode(climate::CLIMATE_SWING_OFF);
   traits.add_supported_swing_mode(climate::CLIMATE_SWING_VERTICAL);
   traits.add_supported_swing_mode(climate::CLIMATE_SWING_HORIZONTAL);
@@ -130,6 +138,9 @@ void KB35MideaClimate::control(const climate::ClimateCall &call) {
     const int temperature = std::clamp(static_cast<int>(std::lround(*call.get_target_temperature())), 16, 30);
     this->status_[2] = static_cast<uint8_t>((this->status_[2] & 0xE0U) | (temperature - 16));
     changed = true;
+  }
+  if (call.get_fan_mode().has_value()) {
+    changed = this->set_native_fan_mode_(*call.get_fan_mode()) || changed;
   }
   if (call.get_swing_mode().has_value()) {
     this->set_swing_(*call.get_swing_mode());
@@ -239,6 +250,7 @@ void KB35MideaClimate::process_status_(const std::vector<uint8_t> &frame) {
 
 void KB35MideaClimate::publish_state_() {
   this->mode = this->mode_from_payload_();
+  this->fan_mode = this->native_fan_mode_from_payload_();
   this->swing_mode = this->swing_from_payload_();
   this->target_temperature = static_cast<float>((this->status_[2] & 0x0FU) + 16);
   this->current_temperature = static_cast<float>(static_cast<int>(this->status_[11]) - 50) / 2.0f;
@@ -360,6 +372,38 @@ climate::ClimateMode KB35MideaClimate::mode_from_payload_() const {
     case 5: return climate::CLIMATE_MODE_FAN_ONLY;
     default: return climate::CLIMATE_MODE_HEAT_COOL;
   }
+}
+
+bool KB35MideaClimate::set_native_fan_mode_(climate::ClimateFanMode mode) {
+  switch (mode) {
+    case climate::CLIMATE_FAN_OFF:
+      this->status_[3] = 0;
+      return true;
+    case climate::CLIMATE_FAN_AUTO:
+      this->status_[3] = MIDEA_FAN_AUTO;
+      return true;
+    case climate::CLIMATE_FAN_LOW:
+      this->status_[3] = 25;
+      return true;
+    case climate::CLIMATE_FAN_MEDIUM:
+      this->status_[3] = 50;
+      return true;
+    case climate::CLIMATE_FAN_HIGH:
+      this->status_[3] = 100;
+      return true;
+    default:
+      ESP_LOGW(TAG, "Nicht unterstützter Klima-Lüftermodus");
+      return false;
+  }
+}
+
+climate::ClimateFanMode KB35MideaClimate::native_fan_mode_from_payload_() const {
+  const uint8_t speed = this->status_[3] & 0x7FU;
+  if (speed == 0) return climate::CLIMATE_FAN_OFF;
+  if (speed == MIDEA_FAN_AUTO) return climate::CLIMATE_FAN_AUTO;
+  if (speed <= 33) return climate::CLIMATE_FAN_LOW;
+  if (speed <= 66) return climate::CLIMATE_FAN_MEDIUM;
+  return climate::CLIMATE_FAN_HIGH;
 }
 
 void KB35MideaClimate::set_swing_(climate::ClimateSwingMode swing) {
