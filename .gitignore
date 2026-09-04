@@ -1,0 +1,11 @@
+# Local Home Assistant files and generated reports must not be committed.
+.storage/
+secrets.yaml
+*.log
+reports/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

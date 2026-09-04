@@ -1,0 +1,7 @@
+{
+  "reference": "Pommel4711/tclac",
+  "branch": "german",
+  "commit": "30ab18ca1de617e366265adab2cea0e45bd0ce68",
+  "checked_at": "2026-09-04",
+  "purpose": "Reference only. The TCL protocol is never merged into the KB35 Midea integration."
+}
