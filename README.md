@@ -70,11 +70,16 @@ später ohne Änderung am ESP nachrüsten.
    werden; die normale Thermostatkarte lässt sich dort über die Oberfläche
    hinzufügen.
 
-Da das Repository privat ist, braucht der ESPHome-Host beim Kompilieren einen
-GitHub-Fine-grained-Token mit Zugriff nur auf dieses Repository und der
-Berechtigung **Contents: Read**. Trage ausschließlich diesen Token als
-`github_read_token` in die nicht eingecheckte `secrets.yaml` ein; die
-Repository-Adresse ist bereits fest in der Vorlage hinterlegt.
+Das Repository ist öffentlich. ESPHome lädt das Paket und den Treiber daher
+direkt von GitHub; ein GitHub-Token ist nicht erforderlich.
+
+### Optionaler Schutz der ESP-Weboberfläche
+
+Standardmäßig ist die ESP-Weboberfläche ohne Anmeldung erreichbar. Wenn du sie
+später schützen möchtest, ergänze in deiner lokalen Geräte-YAML den Inhalt von
+[examples/kb35_web_server_auth.yaml](examples/kb35_web_server_auth.yaml) und
+lege die darin genannten zwei Secrets an. Ohne diesen Block werden weder
+Benutzername noch Passwort verlangt.
 
 Die Funktionen basieren auf den offiziellen
 [ESPHome-Package](https://esphome.io/components/packages/)- und

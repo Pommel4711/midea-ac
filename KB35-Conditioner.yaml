@@ -5,10 +5,6 @@ substitutions:
   device_name: splitanlage_1og
   friendly_name: Splitanlage 1. OG
 
-  # Die Repository-Adresse steht unten direkt bei packages. Nur der Token für
-  # den Lesezugriff auf das private Repository bleibt ein Secret.
-  github_read_token: !secret github_read_token
-
   # ESPHome-Profil nach Bedarf setzen und anschließend kompilieren/flashen:
   # native           = Klima, Prozentlüfter, Innen-/Außentemperatur, Diagnose
   # native_plus      = native plus Boost, Sleep, Frostschutz, Piepton und Gear
@@ -28,7 +24,7 @@ substitutions:
 
 packages:
   remote_package:
-    url: "https://x-access-token:${github_read_token}@github.com/Pommel4711/midea-ac.git"
+    url: https://github.com/Pommel4711/midea-ac.git
     ref: main
     files:
       - packages/kb35_core.yaml

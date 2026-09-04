@@ -1,11 +1,11 @@
 # Kältebringer KB35-12000BTU / Midea UART core package.
 # This is an ESPHome remote package, not a HACS integration.
-# The external component is loaded from this same private repository.
+# The external component is loaded from this public repository.
 
 external_components:
   - source:
       type: git
-      url: "https://x-access-token:${github_read_token}@github.com/Pommel4711/midea-ac.git"
+      url: https://github.com/Pommel4711/midea-ac.git
       ref: main
     components: [kb35_midea]
     refresh: 1d

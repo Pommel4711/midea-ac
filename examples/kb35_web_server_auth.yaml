@@ -1,0 +1,7 @@
+# Optional: Diesen lokalen Block nur einfügen, wenn die ESP-Weboberfläche
+# einen Login verlangen soll. Er erweitert den Webserver aus dem KB35-Paket.
+web_server:
+  auth:
+    type: digest
+    username: !secret kb35_web_server_username
+    password: !secret kb35_web_server_password
