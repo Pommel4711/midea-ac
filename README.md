@@ -28,6 +28,15 @@ stufenlose Prozent-Skala. Deshalb wird der exakte 0–100-%-Regler bewusst als
 zusätzliche, automatisch angelegte Standard-`fan`-Entität bereitgestellt.
 Damit bleibt alles nativ; es ist keinerlei Frontend-Installation erforderlich.
 
+## Optional: schöne Kreisoberfläche später
+
+Wenn du später statt der Standard-Thermostatkarte wieder die Kreisoberfläche
+mit Lüfterrad und hochfahrender Schnellauswahl möchtest, liegt sie vollständig
+getrennt in [optional-custom-dashboard](optional-custom-dashboard/). Sie wird
+nicht automatisch installiert und ist keine HACS-Integration. Du kannst daher
+zunächst ausschließlich mit den nativen Entitäten starten und diese Erweiterung
+später ohne Änderung am ESP nachrüsten.
+
 ## Inbetriebnahme
 
 1. Erstelle dieses Verzeichnis als privates GitHub-Repository und pushe es.

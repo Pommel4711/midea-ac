@@ -21,3 +21,5 @@ Analyse und einer ausdrücklichen Entscheidung eingetragen.
 - Bedienung auf die Standard-Home-Assistant-Entitäten umgestellt: keine
   benutzerdefinierte Lovelace-Karte, keine Ressourceninstallation und kein
   Dashboard-YAML mehr erforderlich.
+- Die frühere Kreisoberfläche als vollständig getrennte, manuell aktivierbare
+  Option unter `optional-custom-dashboard/` bereitgestellt.
