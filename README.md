@@ -57,7 +57,7 @@ später ohne Änderung am ESP nachrüsten.
 ## Inbetriebnahme
 
 1. Erstelle dieses Verzeichnis als privates GitHub-Repository
-   `Pommel4711/kb35-midea-esphome` und pushe es.
+   `Pommel4711/midea-ac` und pushe es.
 2. Kopiere [KB35-Conditioner.yaml](KB35-Conditioner.yaml) in deinen
    ESPHome-Konfigurationsordner und nutze
    [secrets.example.yaml](secrets.example.yaml) als Vorlage.
