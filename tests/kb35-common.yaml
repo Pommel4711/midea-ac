@@ -35,6 +35,9 @@ binary_sensor:
 
 sensor:
   - platform: template
+    id: indoor_temperature
+    name: Innentemperatur
+  - platform: template
     id: outdoor_temperature
     name: Außentemperatur
   - platform: template
@@ -49,7 +52,7 @@ switch:
     turn_on_action: { lambda: id(kb35).set_boost(true); }
     turn_off_action: { lambda: id(kb35).set_boost(false); }
   - platform: template
-    id: sleep
+    id: sleep_switch
     name: Sleep
     optimistic: false
     turn_on_action: { lambda: id(kb35).set_sleep(true); }
@@ -82,8 +85,9 @@ climate:
       temperature_step: 1 °C
     fan: kb35_fan
     boost_switch: boost
-    sleep_switch: sleep
+    sleep_switch: sleep_switch
     frost_switch: frost
+    indoor_temperature: indoor_temperature
     outdoor_temperature: outdoor_temperature
     error_code: error_code
     communication: communication

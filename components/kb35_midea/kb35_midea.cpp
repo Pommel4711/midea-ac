@@ -253,7 +253,14 @@ void KB35MideaClimate::publish_state_() {
   this->fan_mode = this->native_fan_mode_from_payload_();
   this->swing_mode = this->swing_from_payload_();
   this->target_temperature = static_cast<float>((this->status_[2] & 0x0FU) + 16);
-  this->current_temperature = static_cast<float>(static_cast<int>(this->status_[11]) - 50) / 2.0f;
+  // The C0 status carries measured temperatures independently of the target
+  // setpoint. This is the indoor-unit/return-air value, not the requested
+  // temperature in status_[2].
+  const float indoor_temperature = static_cast<float>(static_cast<int>(this->status_[11]) - 50) / 2.0f;
+  this->current_temperature = indoor_temperature;
+  if (this->indoor_temperature_sensor_ != nullptr) {
+    this->indoor_temperature_sensor_->publish_state(indoor_temperature);
+  }
   this->action = (this->status_[1] & 0x01U) ? climate::CLIMATE_ACTION_IDLE : climate::CLIMATE_ACTION_OFF;
   if (this->outdoor_temperature_sensor_ != nullptr) {
     this->outdoor_temperature_sensor_->publish_state(static_cast<float>(static_cast<int>(this->status_[12]) - 50) / 2.0f);

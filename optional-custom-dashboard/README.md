@@ -12,15 +12,18 @@ nicht.
 
 ## Später aktivieren
 
-1. `kb35-climate-dashboard-card.js` nach
+1. In `KB35-Conditioner.yaml` `kb35_profile: custom_dashboard` setzen und den
+   ESP neu flashen. Damit stehen alle von der Karte benötigten nativen
+   ESPHome-Entitäten bereit.
+2. `kb35-climate-dashboard-card.js` nach
    `/config/www/kb35-climate-dashboard-card.js` kopieren.
-2. `kb35-klimaanlage.yaml` nach
+3. `kb35-klimaanlage.yaml` nach
    `/config/lovelace/kb35-klimaanlage.yaml` kopieren.
-3. Den passenden Teil aus `configuration-snippet.yaml` in
+4. Den passenden Teil aus `configuration-snippet.yaml` in
    `/config/configuration.yaml` ergänzen.
-4. In `kb35-klimaanlage.yaml` die Beispiel-Entity-IDs durch die IDs deines
+5. In `kb35-klimaanlage.yaml` die Beispiel-Entity-IDs durch die IDs deines
    automatisch erkannten ESPHome-Geräts ersetzen.
-5. Home Assistant neu starten und die Lovelace-Ressourcen neu laden.
+6. Home Assistant neu starten und die Lovelace-Ressourcen neu laden.
 
 Die Karte bietet das Temperatur-/Lüfterrad, den von unten aufgleitenden
 Schnellauswahl-Bereich, Innen-/Außentemperatur, Boost, Sleep, Frostschutz,

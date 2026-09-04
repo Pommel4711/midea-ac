@@ -1,10 +1,12 @@
 # Local Home Assistant files and generated reports must not be committed.
 .storage/
 secrets.yaml
+tests/secrets.yaml
 *.log
 reports/
 .esphome/
 __pycache__/
+.venv-esphome/
 
 # Editor and operating-system files
 .vscode/

@@ -9,11 +9,21 @@ substitutions:
   kb35_repository_url: https://github.com/DEIN-GITHUB-NAME/kb35-midea-esphome.git
   kb35_repository_ref: main
 
+  # ESPHome-Profil nach Bedarf setzen und anschließend kompilieren/flashen:
+  # native           = Klima, Prozentlüfter, Innen-/Außentemperatur, Diagnose
+  # native_plus      = native plus Boost, Sleep, Frostschutz, Piepton und Gear
+  # custom_dashboard = wie native_plus; aktiviert zusätzlich die optionale
+  #                    Home-Assistant-Kreisoberfläche, wenn sie dort einmalig
+  #                    manuell installiert wurde.
+  kb35_profile: native
+
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
   api_key: !secret api_key
   ota_password: !secret ota_password
   fallback_password: !secret fallback_password
+  web_server_username: !secret kb35_web_server_username
+  web_server_password: !secret kb35_web_server_password
 
   # UART der Klimaanlage: TX der Anlage → RX des ESP, RX der Anlage → TX des ESP.
   uart_rx: GPIO3

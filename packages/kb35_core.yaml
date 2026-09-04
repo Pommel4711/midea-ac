@@ -35,6 +35,8 @@ api:
 ota:
   - platform: esphome
     password: ${ota_password}
+  # Unabhängiges Firmware-Update über die geschützte ESP-Weboberfläche.
+  - platform: web_server
 
 wifi:
   ssid: ${wifi_ssid}
@@ -45,76 +47,138 @@ wifi:
 
 captive_portal:
 
-# Native ESPHome device UI. It exposes the same climate/fan/switch/select
-# entities in a browser; the richer circular UI remains the HA dashboard card.
+# Unabhängige, lokale Geräteoberfläche. Version 3 verwendet Home-Assistant-
+# Styling, gruppiert alle Steuerungen und funktioniert auch ohne Internet.
 web_server:
   version: 3
+  local: true
+  log: false
+  auth:
+    type: digest
+    username: ${web_server_username}
+    password: ${web_server_password}
+  sorting_groups:
+    - id: kb35_web_climate
+      name: Klimaanlage
+      sorting_weight: 0
+    - id: kb35_web_functions
+      name: Zusatzfunktionen
+      sorting_weight: 10
+    - id: kb35_web_diagnostics
+      name: Temperaturen & Diagnose
+      sorting_weight: 20
 
 binary_sensor:
   - platform: template
     id: kb35_communication
     name: Kommunikation
     entity_category: diagnostic
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 30
 
 sensor:
   - platform: template
-    id: kb35_outdoor_temperature
-    name: Außentemperatur
+    id: kb35_indoor_temperature
+    name: Innentemperatur (Innengerät)
     device_class: temperature
     state_class: measurement
     unit_of_measurement: "°C"
     accuracy_decimals: 1
+    web_server:
+      sorting_group_id: kb35_web_climate
+      sorting_weight: 20
+  - platform: template
+    id: kb35_outdoor_temperature
+    name: Außentemperatur (Außengerät)
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    web_server:
+      sorting_group_id: kb35_web_climate
+      sorting_weight: 30
   - platform: template
     id: kb35_error_code
     name: Fehlercode
     entity_category: diagnostic
     accuracy_decimals: 0
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 40
+
+text_sensor:
+  - platform: template
+    id: kb35_profile_status
+    name: Steuerprofil
+    entity_category: diagnostic
+    lambda: return std::string("${kb35_profile}");
+    web_server:
+      sorting_group_id: kb35_web_diagnostics
+      sorting_weight: 10
 
 switch:
   - platform: template
     id: kb35_boost
     name: Boost
     icon: mdi:rocket-launch-outline
+    internal: ${ kb35_profile == "native" }
     optimistic: false
     turn_on_action:
       - lambda: id(kb35_climate).set_boost(true);
     turn_off_action:
       - lambda: id(kb35_climate).set_boost(false);
+    web_server:
+      sorting_group_id: kb35_web_functions
+      sorting_weight: 10
   - platform: template
     id: kb35_sleep
     name: Sleep
     icon: mdi:power-sleep
+    internal: ${ kb35_profile == "native" }
     optimistic: false
     turn_on_action:
       - lambda: id(kb35_climate).set_sleep(true);
     turn_off_action:
       - lambda: id(kb35_climate).set_sleep(false);
+    web_server:
+      sorting_group_id: kb35_web_functions
+      sorting_weight: 20
   - platform: template
     id: kb35_frostschutz
     name: Frostschutz
     icon: mdi:snowflake-thermometer
+    internal: ${ kb35_profile == "native" }
     optimistic: false
     turn_on_action:
       - lambda: id(kb35_climate).set_frost(true);
     turn_off_action:
       - lambda: id(kb35_climate).set_frost(false);
+    web_server:
+      sorting_group_id: kb35_web_functions
+      sorting_weight: 30
   - platform: template
     id: kb35_piepton
     name: Piepton
     icon: mdi:volume-high
     entity_category: config
+    internal: ${ kb35_profile == "native" }
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     turn_on_action:
       - lambda: id(kb35_climate).set_beeper(true);
     turn_off_action:
       - lambda: id(kb35_climate).set_beeper(false);
+    web_server:
+      sorting_group_id: kb35_web_functions
+      sorting_weight: 40
 
 select:
   - platform: template
     id: kb35_leistungsbegrenzung
     name: Leistungsbegrenzung
     icon: mdi:gauge
+    internal: ${ kb35_profile == "native" }
     options: ["Normal", "75 %", "50 %"]
     optimistic: false
     set_action:
@@ -126,6 +190,9 @@ select:
           } else {
             id(kb35_climate).set_power_limit(100);
           }
+    web_server:
+      sorting_group_id: kb35_web_functions
+      sorting_weight: 50
 
 climate:
   - platform: kb35_midea
@@ -141,13 +208,20 @@ climate:
     boost_switch: kb35_boost
     sleep_switch: kb35_sleep
     frost_switch: kb35_frostschutz
+    indoor_temperature: kb35_indoor_temperature
     outdoor_temperature: kb35_outdoor_temperature
     error_code: kb35_error_code
     communication: kb35_communication
     power_limit_select: kb35_leistungsbegrenzung
+    web_server:
+      sorting_group_id: kb35_web_climate
+      sorting_weight: 0
 
 fan:
   - platform: kb35_midea
     id: kb35_fan
     name: Lüfter
     kb35_id: kb35_climate
+    web_server:
+      sorting_group_id: kb35_web_climate
+      sorting_weight: 10

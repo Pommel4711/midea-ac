@@ -48,6 +48,7 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   void set_boost_switch(switch_::Switch *entity) { this->boost_switch_ = entity; }
   void set_sleep_switch(switch_::Switch *entity) { this->sleep_switch_ = entity; }
   void set_frost_switch(switch_::Switch *entity) { this->frost_switch_ = entity; }
+  void set_indoor_temperature_sensor(sensor::Sensor *entity) { this->indoor_temperature_sensor_ = entity; }
   void set_outdoor_temperature_sensor(sensor::Sensor *entity) { this->outdoor_temperature_sensor_ = entity; }
   void set_error_code_sensor(sensor::Sensor *entity) { this->error_code_sensor_ = entity; }
   void set_communication_sensor(binary_sensor::BinarySensor *entity) { this->communication_sensor_ = entity; }
@@ -98,6 +99,7 @@ class KB35MideaClimate final : public climate::Climate, public uart::UARTDevice,
   switch_::Switch *boost_switch_{nullptr};
   switch_::Switch *sleep_switch_{nullptr};
   switch_::Switch *frost_switch_{nullptr};
+  sensor::Sensor *indoor_temperature_sensor_{nullptr};
   sensor::Sensor *outdoor_temperature_sensor_{nullptr};
   sensor::Sensor *error_code_sensor_{nullptr};
   binary_sensor::BinarySensor *communication_sensor_{nullptr};

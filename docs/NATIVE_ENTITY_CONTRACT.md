@@ -15,3 +15,7 @@ Die Klimaentität fasst prozentuale Lüfterwerte auf die nativen Modi Niedrig
 (1–33 %), Mittel (34–66 %) und Hoch (67–100 %) zusammen. Das ist nur eine
 Anzeige-/Auswahlhilfe. Für einen beliebigen exakten Wert ist immer die native
 `fan`-Entität maßgeblich.
+
+Die Solltemperatur (16–30 °C) ist ein Attribut der Klimaentität. Innen- und
+Außentemperatur sind separat gemeldete Messwerte und nicht die Solltemperatur.
+Der vollständige profilabhängige Entitätssatz ist in `PROFILES.md` beschrieben.

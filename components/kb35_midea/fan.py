@@ -7,7 +7,10 @@ from esphome.const import CONF_ID
 
 from .climate import KB35MideaClimate, KB35MideaFan
 
-DEPENDENCIES = ["kb35_midea"]
+# The parent is the custom climate platform, not a top-level ESPHome component.
+# Declaring ``kb35_midea`` as a dependency makes ESPHome look for a nonexistent
+# ``kb35_midea:`` YAML section before it can parse ``fan: - platform:
+# kb35_midea``. The required parent ID below provides the actual dependency.
 CONF_KB35_ID = "kb35_id"
 
 CONFIG_SCHEMA = fan.fan_schema(KB35MideaFan).extend(

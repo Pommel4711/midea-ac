@@ -8,6 +8,11 @@ Analyse und einer ausdrücklichen Entscheidung eingetragen.
 
 ### Hinzugefügt
 
+- Drei ESPHome-Steuerprofile: `native`, `native_plus` und
+  `custom_dashboard`.
+- Eine geschützte lokale ESPHome-Weboberfläche mit Web-OTA, Steuer- und
+  Diagnosegruppen für jedes Profil.
+- Eine kopierbare Secrets-Vorlage und eine Profil-Dokumentation.
 - Ein ESPHome-Remote-Package mit externer, ESP-IDF-fähiger KB35-Midea-Komponente.
 - Native Klima-Lüftermodi Auto/Niedrig/Mittel/Hoch zusätzlich zum exakten
   nativen Prozentlüfter.

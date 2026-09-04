@@ -28,6 +28,23 @@ stufenlose Prozent-Skala. Deshalb wird der exakte 0–100-%-Regler bewusst als
 zusätzliche, automatisch angelegte Standard-`fan`-Entität bereitgestellt.
 Damit bleibt alles nativ; es ist keinerlei Frontend-Installation erforderlich.
 
+## Drei Steuerprofile
+
+In `KB35-Conditioner.yaml` ist zunächst `kb35_profile: native` eingetragen.
+Damit erscheinen nur die Standardklima- und Messentitäten. Vor dem Flashen
+kannst du auf `native_plus` wechseln, um die verifizierten Zusatzfunktionen als
+normale Home-Assistant-Entitäten freizugeben. `custom_dashboard` stellt den
+gleichen vollständigen Satz für die spätere Kreis-Karte bereit. Die Details
+stehen in [docs/PROFILES.md](docs/PROFILES.md).
+
+## ESP-Weboberfläche
+
+Jedes Profil enthält eine lokale, geschützte ESPHome-Weboberfläche (Version 3)
+mit Gruppen für Klima, Zusatzfunktionen und Diagnose. Sie läuft ohne Home
+Assistant unter `http://<device-name>.local/` oder der Geräte-IP. Die
+Zugangsdaten kommen verpflichtend aus `secrets.yaml`; den Webserver niemals
+aus dem Heimnetz ins Internet weiterleiten.
+
 ## Optional: schöne Kreisoberfläche später
 
 Wenn du später statt der Standard-Thermostatkarte wieder die Kreisoberfläche
@@ -41,8 +58,9 @@ später ohne Änderung am ESP nachrüsten.
 
 1. Erstelle dieses Verzeichnis als privates GitHub-Repository und pushe es.
 2. Kopiere [KB35-Conditioner.yaml](KB35-Conditioner.yaml) in deinen
-   ESPHome-Konfigurationsordner.
-3. Trage dort GitHub-URL, WLAN-/API-/OTA-Secrets und UART-Pins ein. Die
+   ESPHome-Konfigurationsordner und nutze
+   [secrets.example.yaml](secrets.example.yaml) als Vorlage.
+3. Trage dort GitHub-URL, WLAN-/API-/OTA-/Web-Secrets und UART-Pins ein. Die
    Vorlage ist ESP32-S3/ESP-IDF; für C6 setze `board: esp32-c6-devkitc-1` und
    behalte ESP-IDF bei.
 4. Kompiliere und flashe im ESPHome-Dashboard.
@@ -50,9 +68,6 @@ später ohne Änderung am ESP nachrüsten.
    Klima- und Lüfterentität können direkt in jedem Standard-Dashboard genutzt
    werden; die normale Thermostatkarte lässt sich dort über die Oberfläche
    hinzufügen.
-
-`web_server: version: 3` ist bereits aktiv. Damit bietet der ESP zusätzlich
-eine funktionale Geräteoberfläche im Browser — ebenfalls ohne HACS.
 
 Die Funktionen basieren auf den offiziellen
 [ESPHome-Package](https://esphome.io/components/packages/)- und
