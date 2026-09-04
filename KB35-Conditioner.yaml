@@ -5,8 +5,9 @@ substitutions:
   device_name: splitanlage_1og
   friendly_name: Splitanlage 1. OG
 
-  # Das persönliche, private Repository mit dem ESPHome-Paket.
-  kb35_repository_url: https://github.com/Pommel4711/kb35-midea-esphome.git
+  # Liegt in secrets.yaml, damit ein möglicher GitHub-Lese-Token nie in die
+  # ESPHome-Konfiguration oder in Git gelangt.
+  kb35_repository_url: !secret kb35_repository_url
   kb35_repository_ref: main
 
   # ESPHome-Profil nach Bedarf setzen und anschließend kompilieren/flashen:

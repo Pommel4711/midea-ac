@@ -70,6 +70,11 @@ später ohne Änderung am ESP nachrüsten.
    werden; die normale Thermostatkarte lässt sich dort über die Oberfläche
    hinzufügen.
 
+Da das Repository privat ist, braucht der ESPHome-Host beim Kompilieren einen
+GitHub-Fine-grained-Token mit Zugriff nur auf dieses Repository und der
+Berechtigung **Contents: Read**. Die fertige HTTPS-Adresse gehört ausschließlich
+als `kb35_repository_url` in die nicht eingecheckte `secrets.yaml`.
+
 Die Funktionen basieren auf den offiziellen
 [ESPHome-Package](https://esphome.io/components/packages/)- und
 [External-Components](https://esphome.io/components/external_components/)-
