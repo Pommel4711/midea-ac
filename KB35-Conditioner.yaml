@@ -5,9 +5,9 @@ substitutions:
   device_name: splitanlage_1og
   friendly_name: Splitanlage 1. OG
 
-  # Liegt in secrets.yaml, damit ein möglicher GitHub-Lese-Token nie in die
-  # ESPHome-Konfiguration oder in Git gelangt.
-  kb35_repository_url: !secret kb35_repository_url
+  # Nur der Lese-Token bleibt geheim. Die Repository-Adresse steht absichtlich
+  # direkt bei packages weiter unten.
+  github_read_token: !secret github_read_token
   kb35_repository_ref: main
 
   # ESPHome-Profil nach Bedarf setzen und anschließend kompilieren/flashen:
@@ -27,16 +27,16 @@ substitutions:
   web_server_password: !secret kb35_web_server_password
 
   # UART der Klimaanlage: TX der Anlage → RX des ESP, RX der Anlage → TX des ESP.
-  uart_rx: GPIO3
-  uart_tx: GPIO1
+  uart_rx: GPIO18
+  uart_tx: GPIO17
 
 packages:
   remote_package:
-    url: ${kb35_repository_url}
+    url: "https://x-access-token:${github_read_token}@github.com/Pommel4711/midea-ac.git"
     ref: ${kb35_repository_ref}
     files:
       - packages/kb35_core.yaml
-    refresh: 1d
+    refresh: 30s
 
 esp32:
   variant: ESP32S3

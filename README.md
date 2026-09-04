@@ -72,8 +72,9 @@ später ohne Änderung am ESP nachrüsten.
 
 Da das Repository privat ist, braucht der ESPHome-Host beim Kompilieren einen
 GitHub-Fine-grained-Token mit Zugriff nur auf dieses Repository und der
-Berechtigung **Contents: Read**. Die fertige HTTPS-Adresse gehört ausschließlich
-als `kb35_repository_url` in die nicht eingecheckte `secrets.yaml`.
+Berechtigung **Contents: Read**. Trage ausschließlich diesen Token als
+`github_read_token` in die nicht eingecheckte `secrets.yaml` ein; die
+Repository-Adresse ist bereits fest in der Vorlage hinterlegt.
 
 Die Funktionen basieren auf den offiziellen
 [ESPHome-Package](https://esphome.io/components/packages/)- und
